@@ -82,29 +82,37 @@ IExpunge:
 
 Open68K:
 		li		r3,0
-		blr
-
-		addi		r12,r1,-16
-		rlwinm	r12,r12,0,0,27
-		stw		r1,0(r12)
-		mr		r1,r12
-		stw		r11,12(r1)
-		lhz		r12,18(r3)
-		add		r3,r3,r12
-		lwz 		r3,4(r3)
-		xor		r4,r4,r4
-		li		r0,200
-		oris		r0,r0,0
-		lwzx		r0,r3,r0
-		mtlr		r0
 		blrl
+.long	ReturnTo68K
 
 Close68K:
 Expunge68K:
 Reserved68K:
 
 		li		r3,0
-		blr
+		blrl
+.long	ReturnTo68K
+
+RunPPC68K:
+WaitForPPC68K:
+GetCPU68K:
+PowerDebugMode68K:
+AllocVec3268K:
+FreeVec3268K:
+SPrintF68K68K:
+AllocXMsg68K:
+FreeXMsg68K:
+PutXMsg68K:
+GetPPCState68K:
+SetCache68K68K:
+CreatePPCTask68K:
+CausePPCInterrupt68K:
+
+		nop
+		blrl
+.long	ReturnTo68K
+#.byte	1,3,0
+#.align	2	
 
 #********************************************************************************************
 #********************************************************************************************
@@ -167,31 +175,132 @@ VECTOR68K:
 .long	Close
 .long	Expunge
 .long	Reserved
+.long	RunPPC
+.long	WaitForPPC
+.long	GetCPU
+.long	PowerDebugMode
+.long	AllocVec32
+.long	FreeVec32
+.long	SPrintF68K
+.long	AllocXMsg
+.long	FreeXMsg
+.long	PutXMsg
+.long	GetPPCState
+.long	SetCache68K
+.long	CreatePPCTask
+.long	CausePPCInterrupt
+
+.long	Reserved
+.long	Reserved
+.long	Reserved
+.long	Reserved
+.long	Reserved
+.long	Reserved
+.long	Reserved
+.long	Reserved
+.long	Reserved
+.long	Reserved
+.long	Reserved
+.long	Reserved
+.long	Reserved
+.long	Reserved
+.long	Reserved
+.long	Reserved
+.long	Reserved
+.long	Reserved
+.long	Reserved
+.long	Reserved
+.long	Reserved
+.long	Reserved
+.long	Reserved
+.long	Reserved
+.long	Reserved
+.long	Reserved
+.long	Reserved
+.long	Reserved
+.long	Reserved
+.long	Reserved
+.long	Reserved				#49 68K Functions
 .long	-1
 
 #********************************************************************************************
 
-Open:
-.short	0x4ef8,0,1
-.ualong	Open68K
-.byte	4,1,60,4,32,3,56,2,48
-.align	1
+ReturnTo68K:
 .short	0x4e75
+
+Open:
+.short	0x4ef8,0,2
+.ualong	Open68K
 
 Close:
 .short	0x4ef8,0,2
 .ualong	Close68K
-.short	0x4e75
 
 Expunge:
 .short	0x4ef8,0,2
 .ualong	Expunge68K
-.short	0x4e75
 
 Reserved:
 .short	0x4ef8,0,2
 .ualong	Reserved68K
-.short	0x4e75
+
+RunPPC:
+.short	0x4ef8,0,2
+.ualong	RunPPC68K
+#.byte	4,1,60,4,32,3,56,2,48
+#.align	1
+
+WaitForPPC:
+.short	0x4ef8,0,2
+.ualong	WaitForPPC68K
+
+GetCPU:
+.short	0x4ef8,0,2
+.ualong	GetCPU68K
+
+PowerDebugMode:
+.short	0x4ef8,0,2
+.ualong	PowerDebugMode68K
+
+AllocVec32:
+.short	0x4ef8,0,2
+.ualong	AllocVec3268K
+
+FreeVec32:
+.short	0x4ef8,0,2
+.ualong	FreeVec3268K
+
+SPrintF68K:
+.short	0x4ef8,0,2
+.ualong	SPrintF68K68K
+
+AllocXMsg:
+.short	0x4ef8,0,2
+.ualong	AllocXMsg68K
+
+FreeXMsg:
+.short	0x4ef8,0,2
+.ualong	FreeXMsg68K
+
+PutXMsg:
+.short	0x4ef8,0,2
+.ualong	PutXMsg68K
+
+GetPPCState:
+.short	0x4ef8,0,2
+.ualong	GetPPCState68K
+
+SetCache68K:
+.short	0x4ef8,0,2
+.ualong	SetCache68K68K
+
+CreatePPCTask:
+.short	0x4ef8,0,2
+.ualong	CreatePPCTask68K
+
+CausePPCInterrupt:
+.short	0x4ef8,0,2
+.ualong	CausePPCInterrupt68K
 
 #********************************************************************************************
 #********************************************************************************************
