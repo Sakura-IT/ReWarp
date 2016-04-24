@@ -1,0 +1,3 @@
+VLIBOS4_DIR=vlibos4:
+RM=delete force
+

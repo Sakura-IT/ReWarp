@@ -1,11 +1,26 @@
+HOST	= aos4	# can be overriden when calling make
+
 AS	= vasmppc_std
 ASOPTS	= -quiet -Felf
 LD	= vlink
-LDOPTS	= -belf32amigaos -Tvlibos4:script -P_start -P__amigaos4__ -q -s -n
+LDOPTS	= -belf32amigaos -T$(VLIBOS4_DIR)script -P_start -P__amigaos4__ -q -s -n
+LHA	= lha
 
-powerpc.library: powerlib.o
+OBJS	= powerlib.o
+POWERPC_LIB = powerpc.library
+
+$(POWERPC_LIB): $(OBJS) 
 	$(LD) $(LDOPTS) -o $@ $<
-	strip $@
+#	strip $@	# no need to call strip, -s to vlink strips all symbols?
 	
-powerlib.o: powerlib.s
+%.o: %.s
 	$(AS) $(ASOPTS) -o $@ $<
+
+clean:
+	$(RM) $(OBJS) $(POWERPC_LIB) $(DISTRIBUTION)
+
+distribution:
+	$(LHA) a $(DISTRIBUTION) $(POWERPC_LIB)
+
+include Makefile.inc.$(HOST)
+

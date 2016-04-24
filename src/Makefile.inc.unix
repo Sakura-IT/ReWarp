@@ -1,0 +1,7 @@
+ifndef VBCC
+$(error VBCC is undefined)
+endif
+
+VLIBOS4_DIR=$(VBCC)/ppc-amigaos/lib/
+RM=rm -f 
+
