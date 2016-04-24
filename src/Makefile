@@ -6,6 +6,7 @@ LD	= vlink
 LDOPTS	= -belf32amigaos -T$(VLIBOS4_DIR)script -P_start -P__amigaos4__ -q -s -n
 LHA	= lha
 
+DISTRIBUTION = ReWarp.lha
 OBJS	= powerlib.o
 POWERPC_LIB = powerpc.library
 
@@ -19,7 +20,7 @@ $(POWERPC_LIB): $(OBJS)
 clean:
 	$(RM) $(OBJS) $(POWERPC_LIB) $(DISTRIBUTION)
 
-distribution:
+distribution: $(POWERPC_LIB)
 	$(LHA) a $(DISTRIBUTION) $(POWERPC_LIB)
 
 include Makefile.inc.$(HOST)
