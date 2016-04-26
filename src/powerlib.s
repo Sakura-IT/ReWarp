@@ -1,5 +1,6 @@
 
 .include	ppcdefines.i
+.include	emulation.i
 #.set __amigaos4__,0
 
 #********************************************************************************************
@@ -79,40 +80,130 @@ IExpunge:
 		blr
 
 #********************************************************************************************
+#********************************************************************************************
 
 Open68K:
 		li		r3,0
-		blrl
-.long	ReturnTo68K
+		blr
+
+#********************************************************************************************
 
 Close68K:
+
+		li	r3,0
+		blr
+
+#********************************************************************************************
+
 Expunge68K:
+
+		li	r3,0
+		blr
+
+#********************************************************************************************
+
 Reserved68K:
 
 		li		r3,0
-		blrl
-.long	ReturnTo68K
+		blr
+
+#********************************************************************************************
 
 RunPPC68K:
+
+		li	r3,0
+		blr
+
+#********************************************************************************************
+
 WaitForPPC68K:
+
+		li	r3,0
+		blr
+
+#********************************************************************************************
+
 GetCPU68K:
+
+		li	r3,0
+		blr
+
+#********************************************************************************************
+
 PowerDebugMode68K:
+
+		li	r3,0
+		blr
+
+#********************************************************************************************
+
 AllocVec3268K:
+
+		li	r3,0
+		blr
+
+#********************************************************************************************
+
 FreeVec3268K:
+
+		li	r3,0
+		blr
+
+#********************************************************************************************
+
 SPrintF68K68K:
+
+		li	r3,0
+		blr
+
+#********************************************************************************************
+
 AllocXMsg68K:
+
+		li	r3,0
+		blr
+
+#********************************************************************************************
+
 FreeXMsg68K:
+
+		li	r3,0
+		blr
+
+#********************************************************************************************
+
 PutXMsg68K:
+
+		li	r3,0
+		blr
+
+#********************************************************************************************
+
 GetPPCState68K:
+
+		li	r3,0
+		blr
+
+#********************************************************************************************
+
 SetCache68K68K:
+
+		li	r3,0
+		blr
+
+#********************************************************************************************
+
 CreatePPCTask68K:
+
+		li	r3,0
+		blr
+
+#********************************************************************************************
+
 CausePPCInterrupt68K:
 
-		nop
-		blrl
-.long	ReturnTo68K
-#.byte	1,3,0
-#.align	2	
+		li	r3,0
+		blr
 
 #********************************************************************************************
 #********************************************************************************************
@@ -225,82 +316,24 @@ VECTOR68K:
 
 #********************************************************************************************
 
-ReturnTo68K:
-.short	0x4e75
-
-Open:
-.short	0x4ef8,0,2
-.ualong	Open68K
-
-Close:
-.short	0x4ef8,0,2
-.ualong	Close68K
-
-Expunge:
-.short	0x4ef8,0,2
-.ualong	Expunge68K
-
-Reserved:
-.short	0x4ef8,0,2
-.ualong	Reserved68K
-
-RunPPC:
-.short	0x4ef8,0,2
-.ualong	RunPPC68K
-#.byte	4,1,60,4,32,3,56,2,48
-#.align	1
-
-WaitForPPC:
-.short	0x4ef8,0,2
-.ualong	WaitForPPC68K
-
-GetCPU:
-.short	0x4ef8,0,2
-.ualong	GetCPU68K
-
-PowerDebugMode:
-.short	0x4ef8,0,2
-.ualong	PowerDebugMode68K
-
-AllocVec32:
-.short	0x4ef8,0,2
-.ualong	AllocVec3268K
-
-FreeVec32:
-.short	0x4ef8,0,2
-.ualong	FreeVec3268K
-
-SPrintF68K:
-.short	0x4ef8,0,2
-.ualong	SPrintF68K68K
-
-AllocXMsg:
-.short	0x4ef8,0,2
-.ualong	AllocXMsg68K
-
-FreeXMsg:
-.short	0x4ef8,0,2
-.ualong	FreeXMsg68K
-
-PutXMsg:
-.short	0x4ef8,0,2
-.ualong	PutXMsg68K
-
-GetPPCState:
-.short	0x4ef8,0,2
-.ualong	GetPPCState68K
-
-SetCache68K:
-.short	0x4ef8,0,2
-.ualong	SetCache68K68K
-
-CreatePPCTask:
-.short	0x4ef8,0,2
-.ualong	CreatePPCTask68K
-
-CausePPCInterrupt:
-.short	0x4ef8,0,2
-.ualong	CausePPCInterrupt68K
+Open:				jmp Open68K
+Close:				jmp Close68K
+Expunge:				jmp Expunge68K
+Reserved:			jmp Reserved68K
+RunPPC:				jmp RunPPC68K
+WaitForPPC:			jmp	WaitForPPC68K
+GetCPU:				jmp	GetCPU68K
+PowerDebugMode:		jmp	PowerDebugMode68K
+AllocVec32:			jmp	AllocVec3268K
+FreeVec32:			jmp	FreeVec3268K
+SPrintF68K:			jmp	SPrintF68K68K
+AllocXMsg:			jmp AllocXMsg68K
+FreeXMsg:			jmp	FreeXMsg68K
+PutXMsg:				jmp	PutXMsg68K
+GetPPCState:			jmp GetPPCState68K
+SetCache68K:			jmp SetCache68K68K
+CreatePPCTask:		jmp CreatePPCTask68K
+CausePPCInterrupt:		jmp CausePPCInterrupt68K
 
 #********************************************************************************************
 #********************************************************************************************
