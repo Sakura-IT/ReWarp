@@ -1,96 +1,5 @@
-#Sonnet Memory Map
-#0x00000000	Zero Page				0x003000	12288
-#0x00003000	Exceptions/Scheduler			0x004000	16384
-#0x00007000	Semaphores				0x000200	512
-#0x00007200	Semaphore memory			0x000200	512
-#0x00007400	Idle Task				0x000c00	3072
-#0x00008000	System Stack				0x008000	32768
-#0x00010000	Free memory				0x0e0000	917504
-#0x00100000	Message FIFOs				0x010000	65536	Must be 0x100000 aligned
-#0x00110000	Message Frames 2x4096xPP_SIZE+48	0x180000
-#0x00290000	Free memory				
-#0x02f00000	Room for the page table			0x100000	1048576 (for 128MB addressing)
-
-#Overhead = 3.5MB
-
-#Sonnet Base:
-
-.set SonnetBase,0
-.set SysBase,4
-.set PPCMemHeader,8
-.set DOSBase,12
-.set MCPort,16
-.set Init,20					#Pointer
-.set CPUHID0,24
-.set CPUHID1,28
-.set RunningTask,32				#Pointer
-.set Atomic,36
-.set TaskListSem,40				#Pointer
-.set SemListSem,44				#Pointer
-.set PortListSem,48				#Pointer
-.set L2STATE,52
-.set CPUSDR1,56					#Pointer
-.set TaskException,60				#Pointer
-.set DState,64
-.set DLockState,65
-.set ExceptionMode,66
-.set RescheduleFlag,67				#626
-.set SnoopSem,68				#Pointer
-.set CurrentPort,72				#610
-.set L2Size,76
-.set IdSysTasks,80				#662
-.set IdDefTasks,84				#666
-.set MemSem,88
-.set PowerPCBase,92
-.set Break,96
-.set LowActivityPrio,100			#658
-.set LowActivityPrioOffset,104			#670
-.set PortInUse,108				#628	; See CurrentPort
-.set DebugLevel,109				#18737
-.set RTGType,112
-.set RTGBase,116
-.set TaskExitCode,120
-.set WaitListSem,124				#18150
-.set CPUInfo,128
-.set AlignStore,132
-.set AlignStore2,136
-.set ViolationAddress,140			#Pointer
-.set MemSize,144
-.set RunPPCStart,148
-
-#LibBase:
-.set LIST_WAITINGTASKS,128
-.set LIST_ALLTASKS,144
-.set LIST_SNOOP,160
-.set LIST_SEMAPHORES,176
-.set LIST_REMOVEDEXC,192
-.set LIST_READYEXC,208
-.set LIST_INSTALLEDEXC,224
-.set LIST_EXCINTERRUPT,240
-.set LIST_EXCIABR,256
-.set LIST_EXCPERFMON,272
-.set LIST_EXCTRACE,288
-.set LIST_EXCSYSTEMCALL,304
-.set LIST_EXCDECREMENTER,320
-.set LIST_EXCFPUN,336
-.set LIST_EXCPROGRAM,352
-.set LIST_EXCALIGN,368
-.set LIST_EXCIACCESS,384
-.set LIST_EXCDACCESS,400
-.set LIST_EXCMCHECK,416
-.set LIST_WAITTIME,432
-.set LIST_PORTS,448
-.set LIST_NEWTASKS,464
-.set LIST_READYTASKS,480
-.set LIST_REMOVEDTASKS,496
-
-.set AlignmentExcHigh,600
-.set AlignmentExcLow,604
-.set DataExcHigh,608
-.set DataExcLow,612
-.set FLAG_WAIT,627
-.set FLAG_READY,628
-.set NumAllTasks,630
+#LibBase
+#Nothing Yet
 
 .set EXCDATA_TYPE,8				#Always NT_INTERRUPT
 .set EXCDATA_PRI,9				#This
@@ -179,18 +88,7 @@
 .set CONTEXT_LENGTH,		544		#End of context
 
 .set MACHINESTATE_DEFAULT,	PSL_IR|PSL_DR|PSL_FP|PSL_PR|PSL_EE
-
-.set _LVOAllocMem,		-198
-.set _LVOFreeMem,		-210
-.set _LVOFindName,		-276
-.set _LVOSignal,		-306
-.set _LVOPutMsg,		-366
-.set _LVOVPrintF,		-954
-.set _LVOAllocVec,		-684
-.set _LVOFreeVec,		-690
-
 .set SysStack,			0x10000			#Length max $8000
-.set IdleTask,			0x7400
 
 .set MEMF_PUBLIC,		0x00000001
 .set MEMF_FAST,			0x00000004
@@ -199,12 +97,6 @@
 .set MEMF_REVERSE,		0x00040000
 
 .set MEMB_CHIP,			0x1
-
-.set SonnetBusClock,66666666			#66.6 MHz
-.set DecTimerFreq,(SonnetBusClock/4)		#Dec goes at 1/4 of Bus clock
-.set SwitchFreq,50				#
-.set Quantum,(DecTimerFreq/SwitchFreq)		#
-.set QuickQuantum,50
 
 .set EXCATTR_CODE,		0x80101000		#
 .set EXCATTR_DATA,		0x80101001		#
@@ -356,47 +248,6 @@
 .set CACHE_L2WTON,14
 .set CACHE_L2WTOFF,15
 
-.set IMIMR,0x104		#Inbound Message Interrupt Mask Register
-.set IMISR,0x100		#Inbound Message Interrupt Status Register
-
-.set IMISR_IM0I,		0x00000001		#Inbound Message 0 Interrupt
-.set IMISR_IM1I,		0x00000002		#Inbound Message 1 Interrupt
-.set IMISR_IPQI,		0x00000020		#Inbound Post Queue Interrupt
-
-.set PCI_COMMAND,0x4
-.set OMBAR,0x2300		#Outbound Memory Base Address Register
-.set OTWR,0x2308		#Outbound Translation Window Register
-.set ITWR,0x2310		#Inbound Translation Window Register
-.set LMBAR,0x10			#Local Memory Base Address Register
-.set IMR0,0x50			#Inbound Message Register 0
-.set MSAR1,0x80			#Memory Start Address Register 1
-.set MSAR2,0x84			#Memory Start Address Register 2
-.set MESAR1,0x88		#Memory Extended Start Address Register 1
-.set MESAR2,0x8C		#Memory Extended Start Address Register 2
-.set MEAR1,0x90			#Memory End Address Register 1
-.set MEAR2,0x94			#Memory End Address Register 2
-.set MEEAR1,0x98		#Memory Extended End Address Register 1
-.set MEEAR2,0x9C		#Memory Extended End Address Register 2
-.set MBEN,0xA0			#Memory Bank Enable
-
-.set IFHPR,0x120		#Inbound Free_FIFO Head Pointer Register
-.set IFTPR,0x128		#Inbound Free_FIFO Tail Pointer Register
-.set IPHPR,0x130		#Inbound Post_FIFO Head Pointer Register
-.set IPTPR,0x138		#Inbound Post_FIFO Tail Pointer Register
-.set OFHPR,0x140		#Outbound Free_FIFO Head Pointer Register
-.set OFTPR,0x148		#Outbound Free_FIFO Tail Pointer Register
-.set OPHPR,0x150		#Outbound Post_FIFO Head Pointer Register
-.set OPTPR,0x158		#Outbound Post_FIFO Tail Pointer Register
-.set QBAR,0x170			#Queue Base Address Register
-.set MUCR,0x164			#Message Unit Control Register
-.set MUCR_CQS_FIFO4K,		0x00000002
-.set MUCR_CQE_ENABLE,		0x00000001
-
-.set MCCR1,0xF0			#Memory Control Configuration Register 1
-.set MCCR2,0xF4			#Memory Control Configuration Register 2
-.set MCCR3,0xF8			#Memory Control Configuration Register 3
-.set MCCR4,0xFC			#Memory Control Configuration Register 4
-
 .set SRR1_TRAP,14
 
 .set srr1,27
@@ -418,17 +269,6 @@
 .set dbat3u,542
 .set dbat3l,543
 .set l2cr,1017
-
-.set EPIC_GCR,0x41020		#Global Configuration Register
-.set EPIC_PCTPR,0x60080		#Processor Current Task Priority Register
-.set EPIC_FRR,0x41000		#Feature Reporting Register
-.set EPIC_GTBCR0,0x41110	#Global Timer Base Count Register 0
-.set EPIC_GTVPR0,0x41120	#Global Timer Vector/Priority Register 0
-.set EPIC_EICR,0x41030		#EPIC interrupt Configuration Register
-.set EPIC_IVPR0,0x50200		#Interrupt Vector/Priority Register 0
-.set EPIC_IVPR3,0x50260		#Interrupt Vector/Priority Register 3
-.set EPIC_IVPR4,0x50280		#Interrupt Vector/Priority Register 4
-.set EPIC_IIVPR3,0x510c0	#I2C Interrupt Vector/Priority Register 3
 
 .set HW_TRACEON,1				#enable singlestep mode
 .set HW_TRACEOFF,2				#disable singlestep mode
@@ -454,16 +294,6 @@
 .set SPRG1,273
 .set SPRG2,274
 .set SPRG3,275
-
-.set CONFIG_ADDR,0xFEC0
-.set CONFIG_DAT,0xFEE0
-.set CMD_BASE,0x8000
-.set VEC_BASE,0xFFF0
-.set EUMBBAR,0x78			#At 0x80000000 (Sonnet side)
-.set EUMB,0xF000
-.set EUMBEPICPROC,EUMB+6
-.set EPIC_IACK,0xa0
-.set EPIC_EOI,0xb0
 
 .set	PSL_VEC,	0x02000000	#/* ..6. AltiVec vector unit available */
 .set	PSL_SPV,	0x02000000	#/* B... (e500) SPE enable */
@@ -640,7 +470,7 @@
 .set TASKPPC_CHOWN,3
 .set TASKPPC_ATOMIC,5
 
-.set TASKPPC_STACKSIZE,92
+.set TASKPPC_STACKSIZE,92				#Problems here when programs use the non-private parts of this structure
 .set TASKPPC_STACKMEM,96
 .set TASKPPC_CONTEXTMEM,100
 .set TASKPPC_TASKPTR,104
@@ -673,17 +503,8 @@
 .set TASKPPC_TASKPOOLS,220
 .set TASKPPC_POOLMEM,238
 .set TASKPPC_MESSAGERIP,242
-.set TASKPPC_STARTMSG,248
-.set TASKPPC_MIRROR68K,252
-.set TASKPPC_MIRRORPORT,256
-.set TASKPPC_CTMEM,260
-.set TASKPPC_LENGTH,TASKPPC_CTMEM
-.set TASKPPC_SSPPC_RESERVE,800
-.set TASKPPC_PORT,832
-.set TASKPPC_ALLTASK,932
-.set TASKPPC_SSPPC_RESERVE2,960
-.set TASKPPC_INTPORT,992
-.set TASKPPC_NAME,1092
+.set TASKPPC_SIZE,248
+
 .set SYS_SIGALLOC,0xFFFF
 
 .set T_PROCTIME,1
@@ -728,14 +549,6 @@
 .set MN_REPLYPORT,14
 .set MN_LENGTH,18
 .set MN_SIZE,20
-.set MN_IDENTIFIER,20
-.set MN_MIRROR,24
-.set MN_PPC,28
-.set MN_PPSTRUCT,32
-.set MN_ARG2,176
-.set MN_ARG1,180
-.set MN_ARG0,184
-.set MN_MCPORT,188
 
 .set MH_ATTRIBUTES,14			# characteristics of this region
 .set MH_FIRST,16			# first free region
@@ -753,19 +566,17 @@
 .set MC_NEXT,0
 .set MC_BYTES,4
 
-.set PP_CODE,MN_PPSTRUCT
-.set PP_OFFSET,PP_CODE+4
-.set PP_FLAGS,PP_CODE+8
-.set PP_STACKPTR,PP_CODE+12
-.set PP_STACKSIZE,PP_CODE+16
-.set PP_REGS,PP_CODE+20
-.set PP_FREGS,PP_CODE+80
+.set PP_CODE,0
+.set PP_OFFSET,4
+.set PP_FLAGS,8
+.set PP_STACKPTR,12
+.set PP_STACKSIZE,16
+.set PP_REGS,20
+.set PP_FREGS,80
 .set PP_SIZE,144
 .set PPB_ASYNC,0
 .set PPB_LINEAR,1
 .set PPB_THROW,2
-.set PPB_INTASYNC,5
-.set PPF_INTASYNC,32
 
 .set ATTEMPT_SUCCESS,-1
 .set ATTEMPT_FAILURE,0
@@ -812,7 +623,7 @@
 .set MIT_VectorTable,0x80000001
 .set MIT_Version,0x80000006
 
-.set	LIBF_SUMUSED,2
+.set LIBF_SUMUSED,2
 .set LIBF_CHANGED,4
 
 .set lib_Flags,14
