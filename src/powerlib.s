@@ -159,8 +159,9 @@ RunPPC68K:
 		lwz	r6,PP_REGS+9*4(r16)
 		lwz	r28,PP_REGS+10*4(r16)
 		lwz	r29,PP_REGS+11*4(r16)
-		lwz	r30,PP_REGS+12*4(r16)
-		lwz	r31,PP_REGS+13*4(r16)
+		lwz	r2,PP_REGS+12*4(r16)
+		lwz	r30,PP_REGS+13*4(r16)
+		lwz	r31,PP_REGS+14*4(r16)
 		
 		lfd	f1,PP_FREGS+0*8(r16)			#Perform FPU test here
 		lfd	f2,PP_FREGS+1*8(r16)
@@ -173,6 +174,7 @@ RunPPC68K:
 		
 		lwz	r17,PP_CODE(r16)
 		mtlr	r17
+		stw	r2,20(r1)
 		blrl		
 		li	r3,PPERR_SUCCESS
 		b	.ExitRunPPC		
