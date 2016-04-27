@@ -1,6 +1,8 @@
 
 .include	ppcdefines.i
 .include	emulation.i
+.include	ppcmacros-std.i
+
 #.set __amigaos4__,0
 
 #********************************************************************************************
@@ -15,25 +17,25 @@ _start:
 
 #********************************************************************************************
 
-INITFUNC:								#r3 = base, r4 = seglist, r5 = exec interface
-			lis	r9,LibName@ha
-			li	r0,NT_LIBRARY
-			stw	r4,36(r3)
-			addi	r9,r9,LibName@l
-			stb	r0,LN_TYPE(r3)
-			li	r0,LIBF_SUMUSED|LIBF_CHANGED
-			stw	r9,LN_NAME(r3)
-			li	r9,18
-			li	r11,0
-			sth	r9,lib_Version(r3)
-			lis	r9,IDString@ha
-			stb	r0,lib_Flags(r3)
-			addi	r9,r9,IDString@l
-			li	r0,0
-			stb	r11,LN_PRI(r3)
-			sth	r0,lib_Revision(r3)
-			stw	r9,lib_IdString(r3)
-			blr
+INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
+		lis	r9,LibName@ha
+		li	r0,NT_LIBRARY
+		stw	r4,36(r3)
+		addi	r9,r9,LibName@l
+		stb	r0,LN_TYPE(r3)
+		li	r0,LIBF_SUMUSED|LIBF_CHANGED
+		stw	r9,LN_NAME(r3)
+		li	r9,18
+		li	r11,0
+		sth	r9,lib_Version(r3)
+		lis	r9,IDString@ha
+		stb	r0,lib_Flags(r3)
+		addi	r9,r9,IDString@l
+		li	r0,0
+		stb	r11,LN_PRI(r3)
+		sth	r0,lib_Revision(r3)
+		stw	r9,lib_IdString(r3)
+		blr
 
 #********************************************************************************************
 
@@ -48,7 +50,7 @@ IObtain:
 
 IRelease:
 		mr	r9,r3
-		lwz		r3,20(r9)
+		lwz	r3,20(r9)
 		addi	r3,r3,-1
 		stw	r3,20(r9)
 		blr
@@ -110,9 +112,9 @@ Reserved68K:
 #********************************************************************************************
 
 RunPPC68K:
-
+		prolog
 		li	r3,0
-		blr
+		epilog
 
 #********************************************************************************************
 
