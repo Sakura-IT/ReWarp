@@ -20,7 +20,7 @@ _start:
 INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 		lis	r9,LibName@ha
 		li	r0,NT_LIBRARY
-		stw	r4,36(r3)
+		stw	r4,libwarp_SegList(r3)
 		addi	r9,r9,LibName@l
 		stb	r0,LN_TYPE(r3)
 		li	r0,LIBF_SUMUSED|LIBF_CHANGED
@@ -110,10 +110,96 @@ Reserved68K:
 		blr
 
 #********************************************************************************************
-
+#
+#		REG68K_D0	=	RunPPC68K (REG68K_A0)	//	68K reg struct in r3
+#
+#********************************************************************************************
 RunPPC68K:
 		prolog
-		li	r3,0
+		
+		stwu	r2,-4(r13)
+		stwu	r16,-4(r13)
+		stwu	r17,-4(r13)
+		stwu	r11,-4(r13)
+		stwu	r12,-4(r13)
+		stwu	r14,-4(r13)
+		stwu	r15,-4(r13)
+		stwu	r18,-4(r13)
+		stwu	r19,-4(r13)
+		stwu	r20,-4(r13)
+		stwu	r21,-4(r13)
+		stwu	r22,-4(r13)
+		stwu	r23,-4(r13)
+		stwu	r24,-4(r13)
+		stwu	r25,-4(r13)
+		stwu	r26,-4(r13)
+		stwu	r27,-4(r13)
+		stwu	r28,-4(r13)
+		stwu	r29,-4(r13)
+		stwu	r30,-4(r13)
+		stwu	r31,-4(r13)
+		
+		lwz	r16,REG68K_A0(r3)
+		lwz	r17,PP_FLAGS(r16)
+		mr.	r17,17
+		bne	.NotStandard
+		lwz	r17,PP_OFFSET(r16)
+		mr.	r17,r17
+		bne	.NotStandard
+		
+		lwz	r3,PP_REGS+0*4(r16)
+		lwz	r4,PP_REGS+1*4(r16)
+		lwz	r22,PP_REGS+2*4(r16)
+		lwz	r23,PP_REGS+3*4(r16)
+		lwz	r24,PP_REGS+4*4(r16)
+		lwz	r25,PP_REGS+5*4(r16)
+		lwz	r26,PP_REGS+6*4(r16)
+		lwz	r27,PP_REGS+7*4(r16)
+		lwz	r5,PP_REGS+8*4(r16)
+		lwz	r6,PP_REGS+9*4(r16)
+		lwz	r28,PP_REGS+10*4(r16)
+		lwz	r29,PP_REGS+11*4(r16)
+		lwz	r30,PP_REGS+12*4(r16)
+		lwz	r31,PP_REGS+13*4(r16)
+		
+		lfd	f1,PP_FREGS+0*8(r16)			#Perform FPU test here
+		lfd	f2,PP_FREGS+1*8(r16)
+		lfd	f3,PP_FREGS+2*8(r16)
+		lfd	f4,PP_FREGS+3*8(r16)
+		lfd	f5,PP_FREGS+4*8(r16)
+		lfd	f6,PP_FREGS+5*8(r16)
+		lfd	f7,PP_FREGS+6*8(r16)
+		lfd	f8,PP_FREGS+7*8(r16)
+		
+		lwz	r17,PP_CODE(r16)
+		mtlr	r17
+		blrl		
+		li	r3,PPERR_SUCCESS
+		b	.ExitRunPPC		
+		
+.NotStandard:	li	r3,PPERR_ASYNCERR
+.ExitRunPPC:	lwz	r31,0(r13)
+		lwz	r30,4(r13)
+		lwz	r29,8(r13)
+		lwz	r28,12(r13)
+		lwz	r27,16(r13)
+		lwz	r26,20(r13)
+		lwz	r25,24(r13)
+		lwz	r24,28(r13)
+		lwz	r23,32(r13)
+		lwz	r22,36(r13)
+		lwz	r21,40(r13)
+		lwz	r20,44(r13)
+		lwz	r19,48(r13)
+		lwz	r18,52(r13)
+		lwz	r15,56(r13)
+		lwz	r14,60(r13)
+		lwz	r12,64(r13)
+		lwz	r11,68(r13)
+		lwz	r17,72(r13)
+		lwz	r16,76(r13)
+		lwz	r2,80(r13)
+		addi	r13,r13,84
 		epilog
 
 #********************************************************************************************
@@ -927,7 +1013,7 @@ ROMTAG:
 #********************************************************************************************
 
 CreateLibTags:
-.long	CLT_DataSize,40,CLT_Interfaces,INTERFACETABLE,CLT_InitFunc,INITFUNC,CLT_Vector68K,VECTOR68K,TAG_DONE,0
+.long	CLT_DataSize,libwarp_PosSize,CLT_Interfaces,INTERFACETABLE,CLT_InitFunc,INITFUNC,CLT_Vector68K,VECTOR68K,TAG_DONE,0
 
 INTERFACETABLE:
 .long	MYINTERFACE,0

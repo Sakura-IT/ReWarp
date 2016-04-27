@@ -1,5 +1,15 @@
 #LibBase
-#Nothing Yet
+.set LIBF_SUMUSED,2
+.set LIBF_CHANGED,4
+
+.set lib_Flags,14
+.set lib_Version,20
+.set lib_Revision,22
+.set lib_IdString,24
+
+.set libwarp_SegList,36
+.set libwarp_IExec,40
+.set libwarp_PosSize,44
 
 .set EXCDATA_TYPE,8				#Always NT_INTERRUPT
 .set EXCDATA_PRI,9				#This
@@ -578,6 +588,10 @@
 .set PPB_LINEAR,1
 .set PPB_THROW,2
 
+.set PPERR_SUCCESS,0
+.set PPERR_ASYNCERR,1
+.set PPERR_WAITERR,2
+
 .set ATTEMPT_SUCCESS,-1
 .set ATTEMPT_FAILURE,0
 
@@ -622,12 +636,4 @@
 .set MIT_Name,0x80000009
 .set MIT_VectorTable,0x80000001
 .set MIT_Version,0x80000006
-
-.set LIBF_SUMUSED,2
-.set LIBF_CHANGED,4
-
-.set lib_Flags,14
-.set lib_Version,20
-.set lib_Revision,22
-.set lib_IdString,24
 
