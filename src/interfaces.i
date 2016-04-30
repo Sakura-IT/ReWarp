@@ -13,6 +13,8 @@
 .set GetInterface,		448
 .set DropInterface,		456
 .set CacheClearE,		492
+.set SuperState,		576
+.set UserState,			580
 .set SetTaskTrap,		588
 
 # Expansion

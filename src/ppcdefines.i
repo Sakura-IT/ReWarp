@@ -2,14 +2,27 @@
 .set LIBF_SUMUSED,2
 .set LIBF_CHANGED,4
 
+.set MACHF_PPC600LIKE,0			#603/604/750/7400
+.set MACHF_PPC400LIKE,1			#440
+
 .set lib_Flags,14
 .set lib_Version,20
 .set lib_Revision,22
 .set lib_IdString,24
+.set lib_OpenCnt,32
 
 .set libwarp_SegList,36
 .set libwarp_IExec,40
-.set libwarp_PosSize,44
+.set libwarp_sr0,44
+.set libwarp_sr1,48
+.set libwarp_sr2,52
+.set libwarp_sr3,56
+.set libwarp_sr4,60
+.set libwarp_sr5,64
+.set libwarp_sr6,68
+.set libwarp_sr7,72
+.set libwarp_MachineFlag,76
+.set libwarp_PosSize,80
 
 .set EXCDATA_TYPE,8				#Always NT_INTERRUPT
 .set EXCDATA_PRI,9				#This

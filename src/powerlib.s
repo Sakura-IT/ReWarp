@@ -131,13 +131,111 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 		epilog
 #********************************************************************************************
 
-.ClassicSetup:	nop
+.ClassicSetup:	li	r14,MACHF_PPC600LIKE
+		stw	r14,libwarp_MachineFlag(r31)
+		
+		CALLOS	r29,Enable
+		
+		CALLOS	r29,SuperState
+		
+		mfsr    r0,0
+		stw     r0,libwarp_sr0(r31)				#load original mmu values
+		mfsr    r14,1
+		stw     r14,libwarp_sr1(r31)
+		mfsr    r0,2
+		stw     r0,libwarp_sr2(r31)
+		mfsr    r14,3
+		stw     r14,libwarp_sr3(r31)
+		mfsr    r0,4
+		stw     r0,libwarp_sr4(r31)
+		mfsr    r14,5
+		stw     r14,libwarp_sr5(r31)
+		mfsr    r0,6
+		stw     r0,libwarp_sr6(r31)
+		mfsr    r14,7
+		stw     r14,libwarp_sr7(r31)
+		mr.	r4,r3
+		beq	.KeepSupr
+		
+		CALLOS	r29,UserState
+		
+.KeepSupr:	CALLOS	r29,Enable
+
 		b	.ErrorIntExp
 
 #********************************************************************************************
 
-.EBookSetup:	nop
+.EBookSetup:	li	r14,MACHF_PPC400LIKE
+		stw	r14,libwarp_MachineFlag(r31)
 		b	.ErrorIntExp
+
+#********************************************************************************************
+
+.ItsPPC600:	mr	r29,r4
+		CALLOS	r30,Disable
+		
+		addic   r29,r29,-1
+		subfe   r29,r29,r29
+		CALLOS	r30,SuperState
+		
+		loadreg	r0,0xefffffff
+		or      r29,r29,r0
+		
+		lwz     r0,libwarp_sr0(r31)			#r31=base
+		and     r0,r29,r0
+		isync
+		mtsr    0,r0
+		sync    
+		isync
+		lwz     r9,libwarp_sr1(r31)
+		and     r9,r29,r9
+		isync
+		mtsr    1,r9
+		sync    
+		isync
+		lwz     r0,libwarp_sr2(r31)
+		and     r0,r29,r0
+		isync
+		mtsr    2,r0
+		sync    
+		isync
+		lwz     r9,libwarp_sr3(r31)
+		and     r9,r29,r9
+		isync
+		mtsr    3,r9
+		sync    
+		isync
+		lwz     r0,libwarp_sr4(r31)
+		and     r0,r29,r0
+		isync
+		mtsr    4,r0
+		sync    
+		isync
+		lwz     r9,libwarp_sr5(r31)
+		and     r9,r29,r9
+		isync
+		mtsr    5,r9
+		sync    
+		isync
+		lwz     r0,libwarp_sr6(r31)
+		and     r0,r29,r0
+		isync
+		mtsr    6,r0
+		sync    
+		isync
+		lwz     r9,libwarp_sr7(r31)
+		and     r29,r29,r9
+		isync
+		mtsr    7,r29
+		sync    
+		isync
+		
+		mr.	r4,r3
+		beq	.KeepSuper
+		CALLOS	r30,UserState
+     
+.KeepSuper:	CALLOS	r30,Enable
+		b	.GoExitOpen
 
 #********************************************************************************************
 IObtain:
@@ -159,15 +257,30 @@ IRelease:
 #********************************************************************************************
 
 IOpen:	
-		stwu	r1,-16(r1)
+		stwu	r1,-24(r1)
+		mflr	r0
+		stw	r0,28(r1)
 		stw	r31,12(r1)
+		stw	r30,16(r1)
+		stw	r29,20(r1)
 		lwz	r31,16(r3)
-		lhz	r9,32(r31)
+		lhz	r9,lib_OpenCnt(r31)
 		addi	r9,r9,1
-		sth	r9,32(r31)
-		mr	r3,r31
+		sth	r9,lib_OpenCnt(r31)
+		cmpwi	r9,1
+		bne	.GoExitOpen
+		lwz	r4,libwarp_MachineFlag(r31)
+		mr.	r4,r4
+		li	r4,1
+		lwz	r30,libwarp_IExec(r31)
+		beq	.ItsPPC600		
+.GoExitOpen:	mr	r3,r31
+		lwz	r0,28(r1)
 		lwz	r31,12(r1)
-		addi	r1,r1,16
+		lwz	r30,16(r1)
+		mtlr	r0
+		lwz	r29,20(r1)
+		addi	r1,r1,24
 		blr
 
 #********************************************************************************************
@@ -287,7 +400,7 @@ RunPPC68K:
 		lwz	r17,PP_CODE(r16)
 		mtlr	r17
 		stw	r2,20(r1)
-#		blrl		
+		blrl		
 		li	r3,PPERR_SUCCESS
 		b	.ExitRunPPC		
 		
