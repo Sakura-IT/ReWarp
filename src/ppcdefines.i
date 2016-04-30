@@ -248,6 +248,8 @@
 .set CACHE_L2WTON,14
 .set CACHE_L2WTOFF,15
 
+.set CACRF_ClearI,8
+
 .set SRR1_TRAP,14
 
 .set srr1,27
@@ -357,6 +359,9 @@
 .set PTE_CACHE_INHIBITED,	0x00000004
 .set PTE_COHERENT,		0x00000002
 .set PTE_GUARDED,		0x00000001
+
+# Settings for segment registers
+.set SR_NO_EXECUTE,		0x10000000
 
 # Protection bits - Lower BAT
 .set BAT_NO_ACCESS,		0x00000000

@@ -8,13 +8,13 @@
 
 #********************************************************************************************
 
-			.text
+		.text
 
 #********************************************************************************************
 		
 _start:
-			li	r3,-1
-			blr
+		li	r3,20
+		blr
 
 #********************************************************************************************
 
@@ -129,9 +129,11 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 		addi	r13,r13,80
 		
 		epilog
+
 #********************************************************************************************
 
-.ClassicSetup:	li	r14,MACHF_PPC600LIKE
+.ClassicSetup:	
+		li	r14,MACHF_PPC600LIKE
 		stw	r14,libwarp_MachineFlag(r31)
 		
 		CALLOS	r29,Enable
@@ -165,20 +167,20 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 
 #********************************************************************************************
 
-.EBookSetup:	li	r14,MACHF_PPC400LIKE
+.EBookSetup:	
+		li	r14,MACHF_PPC400LIKE
 		stw	r14,libwarp_MachineFlag(r31)
 		b	.ErrorIntExp
 
 #********************************************************************************************
 
-.ItsPPC600:	mr	r29,r4
+.ItsPPC600:	
+		subi	r29,r4,1
 		CALLOS	r30,Disable
 		
-		addic   r29,r29,-1
-		subfe   r29,r29,r29
 		CALLOS	r30,SuperState
 		
-		loadreg	r0,0xefffffff
+		loadreg	r0,~SR_NO_EXECUTE
 		or      r29,r29,r0
 		
 		lwz     r0,libwarp_sr0(r31)			#r31=base
@@ -240,30 +242,30 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 #********************************************************************************************
 IObtain:
 		mr	r9,r3
-		lwz 	r3,20(r9)
+		lwz 	r3,Data_RefCount(r9)
 		addi	r3,r3,1
-		stw	r3,20(r9)
+		stw	r3,Data_RefCount(r9)
 		blr
 
 #********************************************************************************************
 
 IRelease:
 		mr	r9,r3
-		lwz	r3,20(r9)
-		addi	r3,r3,-1
-		stw	r3,20(r9)
+		lwz	r3,Data_RefCount(r9)
+		subi	r3,r3,1
+		stw	r3,Data_RefCount(r9)
 		blr
 
 #********************************************************************************************
 
 IOpen:	
-		stwu	r1,-24(r1)
-		mflr	r0
-		stw	r0,28(r1)
-		stw	r31,12(r1)
-		stw	r30,16(r1)
-		stw	r29,20(r1)
-		lwz	r31,16(r3)
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		stwu	r29,-4(r13)
+
+		lwz	r31,Data_LibBase(r3)
 		lhz	r9,lib_OpenCnt(r31)
 		addi	r9,r9,1
 		sth	r9,lib_OpenCnt(r31)
@@ -275,13 +277,13 @@ IOpen:
 		lwz	r30,libwarp_IExec(r31)
 		beq	.ItsPPC600		
 .GoExitOpen:	mr	r3,r31
-		lwz	r0,28(r1)
-		lwz	r31,12(r1)
-		lwz	r30,16(r1)
-		mtlr	r0
-		lwz	r29,20(r1)
-		addi	r1,r1,24
-		blr
+
+		lwz	r29,0(r13)
+		lwz	r30,4(r13)
+		lwz	r31,8(r13)
+		addi	r13,r13,12
+
+		epilog
 
 #********************************************************************************************
 
@@ -359,16 +361,15 @@ RunPPC68K:
 		bne	.NotStandard
 		lwz	r17,PP_OFFSET(r16)
 		mr.	r17,r17
-		bne	.NotStandard
-		
+		bne	.NotStandard		
 		lwz	r3,REG68K_A6(r3)
-		lwz	r3,libwarp_IExec(r3)
-		lwz	r31,492(r3)
+
+		lwz	r31,libwarp_IExec(r3)
 		li	r4,0
 		li	r5,-1
-		li	r6,8
-		mtctr	r31
-		bctrl
+		li	r6,CACRF_ClearI
+		
+		CALLOS	r31,CacheClearE
 		
 		lwz	r3,PP_REGS+0*4(r16)
 		lwz	r4,PP_REGS+1*4(r16)
@@ -395,8 +396,6 @@ RunPPC68K:
 		lfd	f7,PP_FREGS+6*8(r16)
 		lfd	f8,PP_FREGS+7*8(r16)
 		
-		mflr	r17
-		stw	r17,4(r1)
 		lwz	r17,PP_CODE(r16)
 		mtlr	r17
 		stw	r2,20(r1)

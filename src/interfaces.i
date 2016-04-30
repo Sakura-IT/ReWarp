@@ -1,3 +1,6 @@
+# Struct
+.set Data_LibBase,		16
+.set Data_RefCount,		20
 
 # Main
 .set Obtain,			60
