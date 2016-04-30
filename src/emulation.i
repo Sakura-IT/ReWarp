@@ -1,7 +1,7 @@
 
 
-.set TRAPINST,		0x4ef80000
-.set TRAPTYPE,		0x0004
+.set TRAPINST,			0x4ef80000
+.set TRAPTYPE,			0x0004
 .set TRAPTYPENR,		0x0005
 
 .set	REG68K_D0,		0

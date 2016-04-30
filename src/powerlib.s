@@ -2,6 +2,7 @@
 .include	ppcdefines.i
 .include	emulation.i
 .include	ppcmacros-std.i
+.include	interfaces.i
 
 #.set __amigaos4__,0
 
@@ -18,10 +19,33 @@ _start:
 #********************************************************************************************
 
 INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
-		lis	r9,LibName@ha
+
+		prolog
+		
+		stwu	r11,-4(r13)
+		stwu	r12,-4(r13)
+		stwu	r14,-4(r13)
+		stwu	r15,-4(r13)
+		stwu	r16,-4(r13)
+		stwu	r17,-4(r13)
+		stwu	r18,-4(r13)
+		stwu	r19,-4(r13)
+		stwu	r20,-4(r13)
+		stwu	r21,-4(r13)
+		stwu	r22,-4(r13)
+		stwu	r23,-4(r13)
+		stwu	r24,-4(r13)
+		stwu	r25,-4(r13)
+		stwu	r26,-4(r13)
+		stwu	r27,-4(r13)
+		stwu	r28,-4(r13)
+		stwu	r29,-4(r13)
+		stwu	r30,-4(r13)
+		stwu	r31,-4(r13)
+		
+		ldaddr	r9,LibName
 		li	r0,NT_LIBRARY
 		stw	r4,libwarp_SegList(r3)
-		addi	r9,r9,LibName@l
 		stb	r0,LN_TYPE(r3)
 		li	r0,LIBF_SUMUSED|LIBF_CHANGED
 		stw	r9,LN_NAME(r3)
@@ -35,10 +59,87 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 		stb	r11,LN_PRI(r3)
 		sth	r0,lib_Revision(r3)
 		stw	r9,lib_IdString(r3)
-		blr
+		stw	r5,libwarp_IExec(r3)
+		mr	r31,r3
+		
+		mr	r29,r5
+		ldaddr	r4,ExpLib
+		li	r5,52
+		CALLOS	r29,OpenLibrary
+		
+		mr.	r28,r3
+		beq	.ErrorExp
+		ldaddr	r27,MainName
+		mr	r4,r28
+		mr	r5,r27
+		li	r6,1
+		li	r7,0
+		CALLOS	r29,GetInterface
+		
+		mr.	r26,r3
+		beq	.ErrorIntExp
+		loadreg	r0,GMIT_Machine
+		addi	r14,r1,20
+		stw	r0,8(r1)
+		li	r0,0
+		stw	r14,12(r1)
+		stw	r0,16(r1)
+		CALLOS	r26,GetMachineInfoTags
+		
+		mr	r4,26
+		CALLOS	r29,DropInterface
+		
+		lwz	r14,20(r1)
+		cmpwi	r14,MACHINETYPE_UNKNOWN
+		beq	.ErrorIntExp
+		cmpwi	r14,MACHINETYPE_AMIGAONE
+		ble	.ClassicSetup
+		cmpwi	r14,MACHINETYPE_SAM440
+		beq	.EBookSetup
+		cmpwi	r14,MACHINETYPE_PEGASOSII
+		beq	.ClassicSetup
+		cmpwi	r14,MACHINETYPE_SAM460
+		ble	.EBookSetup
+		b	.ErrorIntExp
+		
+.ErrorIntExp:	mr	r4,r28
+		CALLOS	r29,CloseLibrary
+		
+.ErrorExp:	mr	r3,r31
+		lwz	r31,0(r13)
+		lwz	r30,4(r13)
+		lwz	r29,8(r13)
+		lwz	r28,12(r13)
+		lwz	r27,16(r13)
+		lwz	r26,20(r13)
+		lwz	r25,24(r13)
+		lwz	r24,28(r13)
+		lwz	r23,32(r13)
+		lwz	r22,36(r13)
+		lwz	r21,40(r13)
+		lwz	r20,44(r13)
+		lwz	r19,48(r13)
+		lwz	r18,52(r13)
+		lwz	r17,56(r13)
+		lwz	r16,60(r13)
+		lwz	r15,64(r13)
+		lwz	r14,68(r13)
+		lwz	r12,72(r13)
+		lwz	r11,76(r13)
+		addi	r13,r13,80
+		
+		epilog
+#********************************************************************************************
+
+.ClassicSetup:	nop
+		b	.ErrorIntExp
 
 #********************************************************************************************
 
+.EBookSetup:	nop
+		b	.ErrorIntExp
+
+#********************************************************************************************
 IObtain:
 		mr	r9,r3
 		lwz 	r3,20(r9)
@@ -147,6 +248,15 @@ RunPPC68K:
 		mr.	r17,r17
 		bne	.NotStandard
 		
+		lwz	r3,REG68K_A6(r3)
+		lwz	r3,libwarp_IExec(r3)
+		lwz	r31,492(r3)
+		li	r4,0
+		li	r5,-1
+		li	r6,8
+		mtctr	r31
+		bctrl
+		
 		lwz	r3,PP_REGS+0*4(r16)
 		lwz	r4,PP_REGS+1*4(r16)
 		lwz	r22,PP_REGS+2*4(r16)
@@ -172,10 +282,12 @@ RunPPC68K:
 		lfd	f7,PP_FREGS+6*8(r16)
 		lfd	f8,PP_FREGS+7*8(r16)
 		
+		mflr	r17
+		stw	r17,4(r1)
 		lwz	r17,PP_CODE(r16)
 		mtlr	r17
 		stw	r2,20(r1)
-		blrl		
+#		blrl		
 		li	r3,PPERR_SUCCESS
 		b	.ExitRunPPC		
 		
@@ -990,6 +1102,10 @@ FreeMsgFramePPC:
 
 LibName:		
 .byte	"powerpc.library",0
+ExpLib:
+.byte	"expansion.library",0
+MainName:
+.byte	"main",0
 
 IDString:	
 .byte	"$VER: powerpc.library 18.0 (01-Jun-16)",0
