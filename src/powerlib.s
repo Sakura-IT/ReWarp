@@ -238,7 +238,7 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
      
 .KeepSuper:	CALLOS	r30,Enable
 		mr.	r28,r28
-		beq	.GoExitClose
+		beq	.GoBackClose
 		b	.GoExitOpen
 
 #********************************************************************************************
@@ -313,14 +313,15 @@ IClose:
 		lwz	r30,libwarp_IExec(r31)
 		beq	.ItsPPC600
 		
-		lbz	r0,lib_Flags(r31)
+.GoBackClose:	lbz	r0,lib_Flags(r31)
 		andi.	r9,r0,LIBF_DELEXP
 		li	r3,0
 		beq	.GoExitClose
 		
 		nop
 		
-.GoExitClose:	lwz	r28,0(r13)
+.GoExitClose:	li	r3,0
+		lwz	r28,0(r13)
 		lwz	r29,4(r13)
 		lwz	r30,8(r13)
 		lwz	r31,12(r13)
