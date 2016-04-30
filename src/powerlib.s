@@ -175,7 +175,7 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 #********************************************************************************************
 
 .ItsPPC600:	
-		subi	r29,r4,1
+		subi	r29,r28,1
 		CALLOS	r30,Disable
 		
 		CALLOS	r30,SuperState
@@ -237,6 +237,8 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 		CALLOS	r30,UserState
      
 .KeepSuper:	CALLOS	r30,Enable
+		mr.	r28,r28
+		beq	.GoExitClose
 		b	.GoExitOpen
 
 #********************************************************************************************
@@ -264,6 +266,7 @@ IOpen:
 		stwu	r31,-4(r13)
 		stwu	r30,-4(r13)
 		stwu	r29,-4(r13)
+		stwu	r28,-4(r13)
 
 		lwz	r31,Data_LibBase(r3)
 		lhz	r9,lib_OpenCnt(r31)
@@ -273,23 +276,57 @@ IOpen:
 		bne	.GoExitOpen
 		lwz	r4,libwarp_MachineFlag(r31)
 		mr.	r4,r4
-		li	r4,1
+		li	r28,1
 		lwz	r30,libwarp_IExec(r31)
 		beq	.ItsPPC600		
 .GoExitOpen:	mr	r3,r31
 
-		lwz	r29,0(r13)
-		lwz	r30,4(r13)
-		lwz	r31,8(r13)
-		addi	r13,r13,12
+		lwz	r28,0(r13)
+		lwz	r29,4(r13)
+		lwz	r30,8(r13)
+		lwz	r31,12(r13)
+		addi	r13,r13,16
 
 		epilog
 
 #********************************************************************************************
 
 IClose:	
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		stwu	r29,-4(r13)
+		stwu	r28,-4(r13)
+		
+		lwz	r31,Data_LibBase(r3)
+		lhz	r9,lib_OpenCnt(r31)
+		subi	r9,r9,1
+		sth	r9,lib_OpenCnt(r31)
+		cmpwi	r9,0
 		li	r3,0
-		blr
+		bne	.GoExitClose
+		
+		lwz	r4,libwarp_MachineFlag(r31)
+		mr.	r4,r4
+		li	r28,0
+		lwz	r30,libwarp_IExec(r31)
+		beq	.ItsPPC600
+		
+		lbz	r0,lib_Flags(r31)
+		andi.	r9,r0,LIBF_DELEXP
+		li	r3,0
+		beq	.GoExitClose
+		
+		nop
+		
+.GoExitClose:	lwz	r28,0(r13)
+		lwz	r29,4(r13)
+		lwz	r30,8(r13)
+		lwz	r31,12(r13)
+		addi	r13,r13,16
+		
+		epilog
 
 #********************************************************************************************
 
