@@ -170,10 +170,6 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 .EBookSetup:	
 		li	r14,MACHF_PPC400LIKE
 		stw	r14,libwarp_MachineFlag(r31)
-		lis     r4,TRAPNUM_INST_SEGMENT_VIOLATION
-		ldaddr	r5,ExceptionHandler
-		lis     r6,TRAPNUM_INST_SEGMENT_VIOLATION
-		CALLOS	r29,SetTaskTrap
 		b	.ErrorIntExp
 
 #********************************************************************************************
@@ -324,11 +320,18 @@ IOpen:
 		sth	r9,lib_OpenCnt(r31)
 		cmpwi	r9,1
 		bne	.GoExitOpen
+
 		lwz	r4,libwarp_MachineFlag(r31)
 		mr.	r4,r4
 		li	r28,1
 		lwz	r30,libwarp_IExec(r31)
-		beq	.ItsPPC600		
+		beq	.ItsPPC600
+		
+		lis     r4,TRAPNUM_INST_SEGMENT_VIOLATION
+		ldaddr	r5,ExceptionHandler
+		lis     r6,TRAPNUM_INST_SEGMENT_VIOLATION
+		CALLOS	r30,SetTaskTrap		
+				
 .GoExitOpen:	mr	r3,r31
 
 		lwz	r28,0(r13)
@@ -362,6 +365,11 @@ IClose:
 		li	r28,0
 		lwz	r30,libwarp_IExec(r31)
 		beq	.ItsPPC600
+		
+		lis	r4,TRAPNUM_INST_SEGMENT_VIOLATION
+		li	r5,0
+		li	r6,0
+		CALLOS	r30,SetTaskTrap
 		
 .GoBackClose:	lbz	r0,lib_Flags(r31)
 		andi.	r9,r0,LIBF_DELEXP
