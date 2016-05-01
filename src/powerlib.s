@@ -260,6 +260,8 @@ ExceptionHandler:
 		lwz	r31,ExceptionContext_ip(r3)
 		li	r3,0
 		mfctr	r30
+		rlwinm.	r31,r31,0,0,19
+		beq	.ExcDone
 		li	r29,64
 		mtctr	r29
 		li	r29,0
