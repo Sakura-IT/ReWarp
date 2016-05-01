@@ -170,6 +170,10 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 .EBookSetup:	
 		li	r14,MACHF_PPC400LIKE
 		stw	r14,libwarp_MachineFlag(r31)
+		lis     r4,TRAPNUM_INST_SEGMENT_VIOLATION
+		ldaddr	r5,ExceptionHandler
+		lis     r6,TRAPNUM_INST_SEGMENT_VIOLATION
+		CALLOS	r29,SetTaskTrap
 		b	.ErrorIntExp
 
 #********************************************************************************************
@@ -241,6 +245,52 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 		beq	.GoBackClose
 		b	.GoExitOpen
 
+#********************************************************************************************
+
+ExceptionHandler:
+		prolog
+		lis	r0,TRAPNUM_INST_SEGMENT_VIOLATION
+		cmpw	r5,r0
+		beq	.ItsAnISI
+		li	r3,0
+.ExcExit:	epilog		
+		
+.ItsAnISI:	stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		stwu	r29,-4(r13)
+		stwu	r28,-4(r13)
+		stwu	r26,-4(r13)
+		stwu	r25,-4(r13)
+		lwz	r31,ExceptionContext_ip(r3)
+		li	r3,0
+		mfctr	r30
+		li	r29,64
+		mtctr	r29
+		li	r29,0
+		
+.NextTBL:	addi	r29,r29,1
+		bdz	.ExcDone
+		
+		tlbrehi	r28,r29
+		tlbre	r26,r29,2
+		andi.	r25,r28,TLB_VALID
+		beq	.NextTBL
+		rlwinm	r25,r28,0,0,TLB_EPN
+		cmpw	r25,r31
+		bne	.NextTBL
+		ori	r26,r26,TLB_UX|TLB_SX
+		tlbwe	r26,r29,2
+		li	r3,1
+.ExcDone:	mtctr	r30
+		lwz	r25,0(r13)
+		lwz	r26,4(r13)
+		lwz	r28,8(r13)
+		lwz	r29,12(r13)
+		lwz	r30,16(r13)
+		lwz	r31,20(r13)
+		addi	r13,r13,24		
+		b	.ExcExit
+		
 #********************************************************************************************
 IObtain:
 		mr	r9,r3
