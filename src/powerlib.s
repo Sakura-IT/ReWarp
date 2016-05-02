@@ -44,6 +44,8 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 		stwu	r31,-4(r13)
 		
 		ldaddr	r9,LibName
+		lis	r11,WarpLibBase@ha
+		stw	r3,WarpLibBase@l(r11)
 		li	r0,NT_LIBRARY
 		stw	r4,libwarp_SegList(r3)
 		stb	r0,LN_TYPE(r3)
@@ -93,13 +95,19 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 		cmpwi	r14,MACHINETYPE_UNKNOWN
 		beq	.ErrorIntExp
 		cmpwi	r14,MACHINETYPE_AMIGAONE
-		ble	.ClassicSetup
+		ble	.PPC600Setup
 		cmpwi	r14,MACHINETYPE_SAM440
-		beq	.EBookSetup
+		beq	.PPC400Setup
 		cmpwi	r14,MACHINETYPE_PEGASOSII
-		beq	.ClassicSetup
+		beq	.PPC600Setup
+		cmpwi	r14,MACHINETYPE_X1000
+		beq	.PPC600Setup
 		cmpwi	r14,MACHINETYPE_SAM460
-		ble	.EBookSetup
+		beq	.PPC400Setup
+		cmpwi	r14,MACHINETYPE_X5000_20
+		beq	.PPC500Setup
+		cmpwi	r14,MACHINETYPE_X5000_40
+		beq	.PPC500Setup
 		b	.ErrorIntExp
 		
 .ErrorIntExp:	mr	r4,r28
@@ -132,7 +140,7 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 
 #********************************************************************************************
 
-.ClassicSetup:	
+.PPC600Setup:	
 		li	r14,MACHF_PPC600LIKE
 		stw	r14,libwarp_MachineFlag(r31)
 		
@@ -167,11 +175,18 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 
 #********************************************************************************************
 
-.EBookSetup:	
+.PPC400Setup:	
 		li	r14,MACHF_PPC400LIKE
 		stw	r14,libwarp_MachineFlag(r31)
 		b	.ErrorIntExp
-
+		
+#********************************************************************************************		
+		
+.PPC500Setup:	
+		li	r14,MACHF_PPC500LIKE
+		stw	r14,libwarp_MachineFlag(r31)
+		b	.ErrorIntExp
+		
 #********************************************************************************************
 
 .ItsPPC600:	
@@ -260,6 +275,11 @@ ExceptionHandler:
 		lwz	r31,ExceptionContext_ip(r3)
 		li	r3,0
 		mfctr	r30
+		lis	r29,WarpLibBase@ha
+		lwz	r29,WarpLibBase@l(r29)
+		lwz	r29,libwarp_MachineFlag(r29)
+		cmpwi	r29,MACHF_PPC500LIKE
+		beq	.ISIPPC500
 		rlwinm.	r31,r31,0,0,19
 		beq	.ExcDone
 		li	r29,64
@@ -289,7 +309,45 @@ ExceptionHandler:
 		addi	r13,r13,24		
 		b	.ExcExit
 		
+.ISIPPC500:	mfmsr	r25
+		rlwinm	r26,r25,27,31,31			#Get MSR[IS]
+		mfspr	r25,PID0
+		slwi	r25,r25,16
+		or	r25,r25,r26
+		mtspr	MAS6,r25
+		isync
+		tlbsx	r0,r0,r31
+		mfspr	r25,MAS1
+		andis.	r25,r25,MAS1_VALID@h
+		bne	.GotTBL
+		mfspr	r25,PID1
+		slwi	r25,r25,16
+		or	r25,r25,r26
+		mtspr	MAS6,r25
+		isync
+		tlbsx	r0,r0,r31
+		mfspr	r25,MAS1
+		andis.	r25,r25,MAS1_VALID@h
+		bne	.GotTBL
+		mfspr	r25,PID2
+		slwi	r25,r25,16
+		or	r25,r25,r26
+		mtspr	MAS6,r25
+		isync
+		tlbsx	r0,r0,r31				#Should be tlbsx r0,r31 in BookE
+		mfspr	r25,MAS1
+		andis.	r25,r25,MAS1_VALID@h
+		beq	.ExcDone
+.GotTBL:	mfspr	r25,MAS3
+		ori	r25,r25,MAS3_UX|MAS3_SX
+		mtspr	MAS3,r25
+		isync
+		tlbwe	r0,r0,0					#Should be tlbwe in BookE
+		li	r3,1
+		b	.ExcDone
+		
 #********************************************************************************************
+
 IObtain:
 		mr	r9,r3
 		lwz 	r3,Data_RefCount(r9)
@@ -1537,4 +1595,11 @@ CreatePPCTask:			jmp CreatePPCTask68K
 CausePPCInterrupt:		jmp CausePPCInterrupt68K
 
 #********************************************************************************************
+#********************************************************************************************
+
+		.sbss
+
+WarpLibBase:
+.long		0
+
 #********************************************************************************************
