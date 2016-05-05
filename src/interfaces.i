@@ -9,6 +9,7 @@
 # Exec
 .set Disable,			248
 .set Enable,			252
+.set FindTask,			260
 .set ObtainSemaphore,		368
 .set ReleaseSemaphore,		384
 .set OpenLibrary,		424
@@ -19,6 +20,7 @@
 .set SuperState,		576
 .set UserState,			580
 .set SetTaskTrap,		588
+.set GetCPUInfoTags,		768
 
 # Expansion
 .set GetMachineInfoTags,	168

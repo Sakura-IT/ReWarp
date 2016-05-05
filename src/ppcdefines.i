@@ -15,16 +15,18 @@
 
 .set libwarp_SegList,36
 .set libwarp_IExec,40
-.set libwarp_sr0,44
-.set libwarp_sr1,48
-.set libwarp_sr2,52
-.set libwarp_sr3,56
-.set libwarp_sr4,60
-.set libwarp_sr5,64
-.set libwarp_sr6,68
-.set libwarp_sr7,72
-.set libwarp_MachineFlag,76
-.set libwarp_PosSize,80
+.set libwarp_IDOS,44
+.set libwarp_CachedTask,48
+.set libwarp_MachineFlag,52
+.set libwarp_sr0,56
+.set libwarp_sr1,60
+.set libwarp_sr2,64
+.set libwarp_sr3,68
+.set libwarp_sr4,72
+.set libwarp_sr5,76
+.set libwarp_sr6,80
+.set libwarp_sr7,84
+.set libwarp_PosSize,88
 
 .set EXCDATA_TYPE,8				#Always NT_INTERRUPT
 .set EXCDATA_PRI,9				#This
@@ -133,6 +135,12 @@
 .set CPUF_G4,			0x00400000
 .set CPUF_750,			0x00200000
 .set CPUF_7400,			0x00400000
+
+.set CPUF_603E,			0x00000100
+.set CPUF_604E,			0x00010000
+
+.set CPUTYPE_PPC603E,		1
+.set CPUTYPE_PPC604E,		2
 
 .set EXC_GLOBAL,0            				#global handler
 .set EXC_LOCAL,1             				#task dependant handler
@@ -634,14 +642,16 @@
 
 .set RTC_MATCHWORD,0x4afc
 
-.set CLT_DataSize,0x8000000a
-.set CLT_InitFunc,0x80000003
-.set CLT_Interfaces,0x80000009
-.set CLT_Vector68K,0x80000001
+.set CLT_DataSize,			0x8000000a
+.set CLT_InitFunc,			0x80000003
+.set CLT_Interfaces,			0x80000009
+.set CLT_Vector68K,			0x80000001
 
-.set MIT_Name,0x80000009
-.set MIT_VectorTable,0x80000001
-.set MIT_Version,0x80000006
+.set MIT_Name,				0x80000009
+.set MIT_VectorTable,			0x80000001
+.set MIT_Version,			0x80000006
+
+.set GCIT_Model,			0x80000003
 
 .set GMIT_Machine,0x80000001
 .set MACHINETYPE_UNKNOWN,	0

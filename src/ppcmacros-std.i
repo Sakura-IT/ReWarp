@@ -48,3 +48,6 @@
 		blr
 .endm
 
+.macro	illegal
+		.long	0
+.endm
