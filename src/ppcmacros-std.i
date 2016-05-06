@@ -24,7 +24,7 @@
 .macro prolog stacksize
 	.ifb	\stacksize
 		stwu	r1,-1080(r1)
-		stw	r13,1074(r1)
+		stw	r13,1076(r1)
 	.else
 		stwu	r1,-(\stacksize+56)(r1)
 		stw	r13,\stacksize+52(r1)

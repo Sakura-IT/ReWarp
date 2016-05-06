@@ -16,17 +16,19 @@
 .set libwarp_SegList,36
 .set libwarp_IExec,40
 .set libwarp_IDOS,44
-.set libwarp_CachedTask,48
-.set libwarp_MachineFlag,52
-.set libwarp_sr0,56
-.set libwarp_sr1,60
-.set libwarp_sr2,64
-.set libwarp_sr3,68
-.set libwarp_sr4,72
-.set libwarp_sr5,76
-.set libwarp_sr6,80
-.set libwarp_sr7,84
-.set libwarp_PosSize,88
+.set libwarp_ITimer,48
+.set libwarp_CachedTask,52
+.set libwarp_MachineFlag,56
+.set libwarp_StartTimeVal,60
+.set libwarp_sr0,68
+.set libwarp_sr1,72
+.set libwarp_sr2,76
+.set libwarp_sr3,80
+.set libwarp_sr4,84
+.set libwarp_sr5,88
+.set libwarp_sr6,92
+.set libwarp_sr7,96
+.set libwarp_PosSize,100
 
 .set EXCDATA_TYPE,8				#Always NT_INTERRUPT
 .set EXCDATA_PRI,9				#This
@@ -95,6 +97,7 @@
 .set SysStack,			0x10000			#Length max $8000
 
 .set MEMF_PUBLIC,		0x00000001
+.set MEMF_CHIP,			0x00000002
 .set MEMF_FAST,			0x00000004
 .set MEMF_CLEAR,		0x00010000
 .set MEMF_PPC,			0x00002000
@@ -636,6 +639,7 @@
 
 .set TAG_DONE,0
 .set MEMERR_SUCCESS,0
+.set FALSE,0
 
 .set RTF_AUTOINIT,0x80
 .set RTF_NATIVE,0x20
@@ -652,6 +656,13 @@
 .set MIT_Version,			0x80000006
 
 .set GCIT_Model,			0x80000003
+
+.set ASOT_PORT,			6
+.set ASOT_IOREQUEST,		0
+
+.set ASO_NoTrack,			0x80000001
+.set ASOIOR_ReplyPort,			0x8000000b
+.set ASOIOR_Size,			0x8000000a
 
 .set GMIT_Machine,0x80000001
 .set MACHINETYPE_UNKNOWN,	0
@@ -673,4 +684,6 @@
 .set MAS3_UX,0x20
 .set MAS3_SX,0x10
 .set MAS1_VALID,			0x80000000
+
+.set io_Device,			20
 

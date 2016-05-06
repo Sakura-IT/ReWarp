@@ -30,6 +30,10 @@
 .set	REG68K_FP6,		112
 .set	REG68K_FP7,		120
 
+.set	EmuWS,			674
+
+.set	ET_Offset,		0x80000015
+
 .macro	jmp	function
 	.ualong	TRAPINST
 	.short	TRAPTYPE

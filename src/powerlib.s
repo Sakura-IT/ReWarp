@@ -63,15 +63,67 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 		stw	r9,lib_IdString(r3)
 		stw	r5,libwarp_IExec(r3)
 		mr	r31,r3
-		
 		mr	r29,r5
+		
+		li	r4,ASOT_PORT
+		loadreg	r5,ASO_NoTrack
+		stw	r5,8(r1)
+		li	r5,FALSE
+		stw	r5,12(r1)
+		stw	r5,16(r1)
+		CALLOS	r29,AllocSysObjectTags
+
+		mr.	r25,r3
+		beq	.ErrorExp
+		
+		li	r4,ASOT_IOREQUEST
+		loadreg	r5,ASO_NoTrack
+		stw	r5,8(r1)
+		li	r5,FALSE
+		stw	r5,12(r1)
+		stw	r5,32(r1)
+		loadreg	r5,ASOIOR_ReplyPort
+		stw	r5,16(r1)
+		stw	r25,20(r1)
+		loadreg	r5,ASOIOR_Size
+		stw	r5,24(r1)
+		li	r5,40
+		stw	r5,28(r1)
+		CALLOS	r29,AllocSysObjectTags
+		
+		mr.	r25,r3
+		beq	.ErrorExp
+		
+		ldaddr	r4,TimerDev
+		li	r5,0
+		mr	r6,r25
+		li	r7,0
+		CALLOS	r29,OpenDevice
+		
+		mr.	r24,r3
+		bne	.ErrorExp
+		
+		ldaddr	r27,MainName
+		lwz	r4,io_Device(r25)
+		mr	r5,r27
+		li	r6,1
+		li	r7,0
+		CALLOS	r29,GetInterface
+		
+		stw	r3,libwarp_ITimer(r31)
+		mr.	r23,r3
+		beq	.ErrorExp
+		
+		la	r4,libwarp_StartTimeVal(r31)
+		CALLOS	r23,GetSysTime
+		
 		ldaddr	r4,ExpLib
 		li	r5,52
 		CALLOS	r29,OpenLibrary
 		
 		mr.	r28,r3
 		beq	.ErrorExp
-		ldaddr	r27,MainName
+		
 		mr	r4,r28
 		mr	r5,r27
 		li	r6,1
@@ -515,11 +567,8 @@ RunPPC68K:
 		lwz	r17,PP_FLAGS(r16)
 		mr.	r17,17
 		bne	.NotStandard
-		lwz	r17,PP_OFFSET(r16)
-		mr.	r17,r17
-		bne	.NotStandard		
+	
 		lwz	r3,REG68K_A6(r3)
-
 		lwz	r31,libwarp_IExec(r3)
 		mr	r26,r3
 		
@@ -566,9 +615,42 @@ RunPPC68K:
 		lfd	f8,PP_FREGS+7*8(r16)
 		
 		lwz	r17,PP_CODE(r16)
-		mtlr	r17
+		lwz	r18,PP_OFFSET(r16)
+		mr.	r18,r18
+		beq	.JustCode
+		
+		add	r17,r17,r18
+		lwz	r17,2(r17)				#Get jump		
+		
+.JustCode:	mtlr	r17
 		stw	r2,20(r1)
-		blrl		
+		blrl
+		
+		stw	r3,PP_REGS+0*4(r16)
+		stw	r4,PP_REGS+1*4(r16)
+		stw	r22,PP_REGS+2*4(r16)
+		stw	r23,PP_REGS+3*4(r16)
+		stw	r24,PP_REGS+4*4(r16)
+		stw	r25,PP_REGS+5*4(r16)
+		stw	r26,PP_REGS+6*4(r16)
+		stw	r27,PP_REGS+7*4(r16)
+		stw	r5,PP_REGS+8*4(r16)
+		stw	r6,PP_REGS+9*4(r16)
+		stw	r28,PP_REGS+10*4(r16)
+		stw	r29,PP_REGS+11*4(r16)
+		stw	r2,PP_REGS+12*4(r16)
+		stw	r30,PP_REGS+13*4(r16)
+		stw	r31,PP_REGS+14*4(r16)
+		
+		stfd	f1,PP_FREGS+0*8(r16)			#Perform FPU test here
+		stfd	f2,PP_FREGS+1*8(r16)
+		stfd	f3,PP_FREGS+2*8(r16)
+		stfd	f4,PP_FREGS+3*8(r16)
+		stfd	f5,PP_FREGS+4*8(r16)
+		stfd	f6,PP_FREGS+5*8(r16)
+		stfd	f7,PP_FREGS+6*8(r16)
+		stfd	f8,PP_FREGS+7*8(r16)
+				
 		li	r3,PPERR_SUCCESS
 		b	.ExitRunPPC		
 		
@@ -716,9 +798,83 @@ CausePPCInterrupt68K:
 #********************************************************************************************
 
 Run68K:
-		illegal
-		li	r3,13
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		stwu	r29,-4(r13)
+		stwu	r28,-4(r13)
+		stwu	r27,-4(r13)
+		
+		mr	r31,r4
+		mr	r30,r3
+		lwz	r29,libwarp_IExec(r30)
+		lwz	r27,PP_FLAGS(r31)
+		mr.	r27,r27
+		bne	.RunError68
+		
+		li	r4,0
+		CALLOS	r29,FindTask
+		
+		lbz	r0,LN_TYPE(r3)
+		cmpwi	r0,NT_PROCESS
+		bne	.RunError68
+		
+		lwz	r28,Data_LibBase(r29)
+		lwz	r4,EmuWS(r28)
+		mr	r28,r4
+		addi	r5,r1,144
+		li	r6,128
+		CALLOS	r29,CopyMem
+		
+		la	r4,PP_FREGS(r31)
+		la	r5,REG68K_FP0(r28)
+		li	r6,64
+		CALLOS	r29,CopyMem
+		
+		la	r4,PP_REGS(r31)
+		mr	r5,r28
+		li	r6,60
+		CALLOS	r29,CopyMem
+		
+		lwz	r4,PP_CODE(r31)
+		loadreg	r27,ET_Offset
+		stw	r27,8(r1)
+		lwz	r27,PP_OFFSET(r31)
+		stw	r27,12(r1)
+		li	r27,0
+		stw	r27,16(r1)	
+		CALLOS	r29,EmulateTags
+
+		stw	r3,PP_REGS(r31)
+		la	r4,REG68K_D1(r28)
+		la	r5,PP_REGS+1*4(r31)
+		li	r6,56
+		CALLOS	r29,CopyMem
+		
+		la	r4,REG68K_FP0(r28)
+		la	r5,PP_FREGS(r31)
+		li	r6,64
+		CALLOS	r29,CopyMem
+		
+		addi	r4,r1,144
+		mr	r5,r28
+		li	r6,128
+		CALLOS	r29,CopyMem
+
+		li	r3,0
+		b	.RunExit
+		
+.RunError68:	li	r3,3
+				
+.RunExit:	lwz	r27,0(r13)
+		lwz	r28,4(r13)
+		lwz	r29,8(r13)
+		lwz	r30,12(r13)
+		lwz	r31,16(r13)
+		addi	r13,r13,20
+
+		epilog
 
 #********************************************************************************************
 
@@ -744,16 +900,42 @@ Run68KLowLevel:
 #********************************************************************************************
 
 AllocVecPPC:
-		illegal
-		li	r3,17
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		lwz	r31,libwarp_IExec(r3)
+		loadreg	r0,MEMF_CLEAR|MEMF_CHIP|MEMF_REVERSE
+		and	r5,r5,r0
+		
+		CALLOS	r31,AllocVec
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 FreeVecPPC:
-		illegal
-		li	r3,18
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		lwz	r31,libwarp_IExec(r3)
+		
+		CALLOS	r31,FreeVec
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
@@ -1058,7 +1240,9 @@ ChangeMMU:
 
 #********************************************************************************************
 
-GetInfo:
+GetInfo:	
+		li	r3,0
+		blr
 		illegal
 		li	r3,62
 		blr
@@ -1164,10 +1348,31 @@ PutXMsgPPC:
 #********************************************************************************************
 
 GetSysTimePPC:
-		illegal
-		li	r3,77
-		blr
-
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		stwu	r29,-4(r13)
+		
+		mr	r31,r3
+		lwz	r30,libwarp_ITimer(r3)
+		mr	r29,r4
+		
+		CALLOS	r30,GetSysTime
+		
+		mr	r4,r29
+		la	r5,libwarp_StartTimeVal(r31)
+		mr	r31,r5
+		
+		CALLOS	r30,SubTime
+		
+		lwz	r29,0(r13)
+		lwz	r30,4(r13)
+		lwz	r31,8(r13)
+		addi	r13,r13,12
+		
+		epilog
+		
 #********************************************************************************************
 
 AddTimePPC:
@@ -1178,9 +1383,13 @@ AddTimePPC:
 #********************************************************************************************
 
 SubTimePPC:
-		illegal
-		li	r3,79
-		blr
+		prolog
+		
+		lwz	r9,libwarp_ITimer(r3)
+		
+		CALLOS	r9,SubTime
+		
+		epilog
 
 #********************************************************************************************
 
@@ -1410,6 +1619,8 @@ LibName:
 .byte	"powerpc.library",0
 ExpLib:
 .byte	"expansion.library",0
+TimerDev:
+.byte	"timer.device",0
 MainName:
 .byte	"main",0
 
