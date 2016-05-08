@@ -326,7 +326,6 @@ ExceptionHandler:
 		stwu	r25,-4(r13)
 		lwz	r31,ExceptionContext_ip(r3)
 		li	r3,0
-		mfctr	r30
 		lis	r29,WarpLibBase@ha
 		lwz	r29,WarpLibBase@l(r29)
 		lwz	r29,libwarp_MachineFlag(r29)
@@ -334,14 +333,14 @@ ExceptionHandler:
 		beq	.ISIPPC500
 		rlwinm.	r31,r31,0,0,19
 		beq	.ExcDone
-		li	r29,64
-		mtctr	r29
 		li	r29,0
+		b	.FirstTBL
 		
 .NextTBL:	addi	r29,r29,1
-		bdz	.ExcDone
+		cmpwi	r29,64
+		beq	.ExcDone
 		
-		tlbrehi	r28,r29
+.FirstTBL:	tlbrehi	r28,r29
 		tlbre	r26,r29,2
 		andi.	r25,r28,TLB_VALID
 		beq	.NextTBL
@@ -350,9 +349,11 @@ ExceptionHandler:
 		bne	.NextTBL
 		ori	r26,r26,TLB_UX|TLB_SX
 		tlbwe	r26,r29,2
+		sync
+		isync
 		li	r3,1
-.ExcDone:	mtctr	r30
-		lwz	r25,0(r13)
+
+.ExcDone:	lwz	r25,0(r13)
 		lwz	r26,4(r13)
 		lwz	r28,8(r13)
 		lwz	r29,12(r13)
@@ -728,16 +729,43 @@ PowerDebugMode68K:
 #********************************************************************************************
 
 AllocVec3268K:
-		illegal
-		li	r3,3
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		lwz	r31,REG68K_A6(r3)
+		loadreg	r5,MEMF_CLEAR|MEMF_CHIP|MEMF_REVERSE
+		lwz	r0,REG68K_D1(r3)
+		lwz	r4,REG68K_D0(r3)
+		and	r5,r0,r5
+		lwz	r30,libwarp_IExec(r31)
+		CALLOS	r30,AllocVec
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 FreeVec3268K:
-		illegal
-		li	r3,4
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		lwz	r31,REG68K_A6(r3)
+		lwz	r4,REG68K_A1(r3)
+		lwz	r30,libwarp_IExec(r31)
+		CALLOS	r30,FreeVec
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
@@ -899,7 +927,7 @@ Run68KLowLevel:
 
 #********************************************************************************************
 
-AllocVecPPC:
+AllocVecPPC:						#NEEDS MEMLIST
 		prolog
 		
 		stwu	r31,-4(r13)
@@ -920,7 +948,7 @@ AllocVecPPC:
 
 #********************************************************************************************
 
-FreeVecPPC:
+FreeVecPPC:						#NEEDS MEMLIST
 		prolog
 		
 		stwu	r31,-4(r13)
@@ -954,9 +982,12 @@ DeleteTaskPPC:
 #********************************************************************************************
 
 FindTaskPPC:
-		illegal
-		li	r3,21
-		blr
+		prolog
+		
+		lwz	r9,libwarp_IExec(r3)
+		CALLOS	r9,FindTask
+		
+		epilog
 
 #********************************************************************************************
 
@@ -1016,52 +1047,73 @@ FindSemaphorePPC:
 
 #********************************************************************************************
 
-InsertPPC:
-		illegal
-		li	r3,30
-		blr
+InsertPPC:	
+		prolog
+		
+		lwz	r9,libwarp_IExec(r3)
+		CALLOS	r9,Insert
+
+		epilog
 
 #********************************************************************************************
 
 AddHeadPPC:
-		illegal
-		li	r3,31
-		blr
+		prolog
+		
+		lwz	r9,libwarp_IExec(r3)
+		CALLOS	r9,AddHead
+
+		epilog
 
 #********************************************************************************************
 
 AddTailPPC:
-		illegal
-		li	r3,32
-		blr
+		prolog
+		
+		lwz	r9,libwarp_IExec(r3)
+		CALLOS	r9,AddTail
+
+		epilog
 
 #********************************************************************************************
 
 RemovePPC:
-		illegal
-		li	r3,33
-		blr
+		prolog
+		
+		lwz	r9,libwarp_IExec(r3)
+		CALLOS	r9,Remove
+
+		epilog
 
 #********************************************************************************************
 
 RemHeadPPC:
-		illegal
-		li	r3,34
-		blr
+		prolog
+		
+		lwz	r9,libwarp_IExec(r3)
+		CALLOS	r9,RemHead
+
+		epilog
 
 #********************************************************************************************
 
 RemTailPPC:
-		illegal
-		li	r3,35
-		blr
+		prolog
+		
+		lwz	r9,libwarp_IExec(r3)
+		CALLOS	r9,RemTail
+
+		epilog
 
 #********************************************************************************************
 
 EnqueuePPC:
-		illegal
-		li	r3,36
-		blr
+		prolog
+		
+		lwz	r9,libwarp_IExec(r3)
+		CALLOS	r9,Enqueue
+
+		epilog
 
 #********************************************************************************************
 
@@ -1108,9 +1160,12 @@ FreeSignalPPC:
 #********************************************************************************************
 
 SetSignalPPC:
-		illegal
-		li	r3,43
-		blr
+		prolog
+		
+		lwz	r9,libwarp_IExec(r3)
+		CALLOS	r9,SetSignal
+		
+		epilog
 
 #********************************************************************************************
 
@@ -1198,9 +1253,7 @@ WaitTime:
 
 #********************************************************************************************
 
-ChangeStack:
-		illegal
-		li	r3,56
+ChangeStack:					#Not Needed
 		blr
 
 #********************************************************************************************
@@ -1240,11 +1293,8 @@ ChangeMMU:
 
 #********************************************************************************************
 
-GetInfo:	
+GetInfo:					#NEEDS IMPLEMENTATION
 		li	r3,0
-		blr
-		illegal
-		li	r3,62
 		blr
 
 #********************************************************************************************
@@ -1312,9 +1362,8 @@ ReplyMsgPPC:
 
 #********************************************************************************************
 
-FreeAllMem:
-		illegal
-		li	r3,72
+FreeAllMem:					#NEEDS IMPLEMENTATION
+		li	r3,0
 		blr
 
 #********************************************************************************************
@@ -1527,30 +1576,36 @@ CauseInterrupt:
 #********************************************************************************************
 
 CreatePoolPPC:
-		illegal
-		li	r3,99
-		blr
+		prolog
+		loadreg	r0,MEMF_CLEAR|MEMF_CHIP|MEMF_REVERSE
+		and	r4,r4,r0
+		lwz	r9,libwarp_IExec(r3)
+		CALLOS	r9,CreatePool
+		epilog
 
 #********************************************************************************************
 
 DeletePoolPPC:
-		illegal
-		li	r3,100
-		blr
+		prolog
+		lwz	r9,libwarp_IExec(r3)
+		CALLOS	r9,DeletePool
+		epilog
 
 #********************************************************************************************
 
 AllocPooledPPC:
-		illegal
-		li	r3,101
-		blr
+		prolog
+		lwz	r9,libwarp_IExec(r3)
+		CALLOS	r9,AllocPooled
+		epilog
 
 #********************************************************************************************
 
 FreePooledPPC:
-		illegal
-		li	r3,102
-		blr
+		prolog
+		lwz	r9,libwarp_IExec(r3)
+		CALLOS	r9,FreePooled
+		epilog
 
 #********************************************************************************************
 

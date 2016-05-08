@@ -7,12 +7,24 @@
 .set Release,			64
 
 # Exec
+.set AddHead,			76
+.set AddTail,			88
+.set AllocPooled,		108
 .set AllocVec,			112
 .set CopyMem,			124
+.set CreatePool,		132
+.set DeletePool,		140
+.set Enqueue,			144
+.set FreePooled,		168
 .set FreeVec,			172
+.set Insert,			188
+.set RemHead,			208
+.set Remove,			216
+.set RemTail,			220
 .set Disable,			248
 .set Enable,			252
 .set FindTask,			260
+.set SetSignal,			288
 .set ObtainSemaphore,		368
 .set ReleaseSemaphore,		384
 .set OpenLibrary,		424
