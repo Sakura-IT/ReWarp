@@ -25,8 +25,13 @@
 .set Enable,			252
 .set FindTask,			260
 .set SetSignal,			288
+.set AddSemaphore,		348
+.set AttemptSemaphore,		352
+.set FindSemaphore,		360
+.set InitSemaphore,		364
 .set ObtainSemaphore,		368
 .set ReleaseSemaphore,		384
+.set RemSemaphore,		392
 .set OpenLibrary,		424
 .set CloseLibrary,		428
 .set GetInterface,		448

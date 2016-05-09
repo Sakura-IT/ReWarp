@@ -992,58 +992,80 @@ FindTaskPPC:
 #********************************************************************************************
 
 InitSemaphorePPC:
-		illegal
-		li	r3,22
-		blr
+		prolog
+		
+		lwz	r9,libwarp_IExec(r3)
+		CALLOS	r9,InitSemaphore
+		
+		epilog
 
 #********************************************************************************************
 
-FreeSemaphorePPC:
-		illegal
-		li	r3,23
+FreeSemaphorePPC:					#Not needed
 		blr
 
 #********************************************************************************************
 
 AddSemaphorePPC:
-		illegal
-		li	r3,24
-		blr
+		prolog
+		
+		lwz	r9,libwarp_IExec(r3)
+		CALLOS	r9,AddSemaphore
+		
+		epilog
 
 #********************************************************************************************
 
 RemSemaphorePPC:
-		illegal
-		li	r3,25
-		blr
+		prolog
+		
+		lwz	r9,libwarp_IExec(r3)
+		CALLOS	r9,RemSemaphore
+		
+		epilog
 
 #********************************************************************************************
 
 ObtainSemaphorePPC:
-		illegal
-		li	r3,26
-		blr
+		prolog
+		
+		lwz	r9,libwarp_IExec(r3)
+		CALLOS	r9,ObtainSemaphore
+		
+		epilog
 
 #********************************************************************************************
 
 AttemptSemaphorePPC:
-		illegal
-		li	r3,27
-		blr
+		prolog
+		
+		lwz	r9,libwarp_IExec(r3)
+		CALLOS	r9,AttemptSemaphore
+		cntlzw	r9,r3
+		rlwinm	r9,r9,27,5,31
+		subi	r3,r9,1
+
+		epilog
 
 #********************************************************************************************
 
 ReleaseSemaphorePPC:
-		illegal
-		li	r3,28
-		blr
+		prolog
+		
+		lwz	r9,libwarp_IExec(r3)
+		CALLOS	r9,ReleaseSemaphore
+		
+		epilog
 
 #********************************************************************************************
 
 FindSemaphorePPC:
-		illegal
-		li	r3,29
-		blr
+		prolog
+		
+		lwz	r9,libwarp_IExec(r3)
+		CALLOS	r9,FindSemaphore
+		
+		epilog
 
 #********************************************************************************************
 
