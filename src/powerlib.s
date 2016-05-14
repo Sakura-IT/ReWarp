@@ -562,7 +562,7 @@ RunPPC68K:
 		
 		lwz	r16,REG68K_A0(r3)
 		lwz	r17,PP_FLAGS(r16)
-		mr.	r17,17
+		andi.	r0,r17,PPF_ASYNC|PPF_THROW
 		bne	.NotStandard
 	
 		lwz	r3,REG68K_A6(r3)
@@ -598,7 +598,16 @@ RunPPC68K:
 		lwz	r30,PP_REGS+13*4(r16)
 		lwz	r31,PP_REGS+14*4(r16)
 		
-		lfd	f1,PP_FREGS+0*8(r16)			#Perform FPU test here
+		andi.	r0,r17,PPF_LINEAR
+		beq	.NotLinear
+		mr	r5,r22
+		mr	r6,r23
+		mr	r7,r24
+		mr	r8,r25
+		mr	r9,r26
+		mr	r10,r27
+		
+.NotLinear:	lfd	f1,PP_FREGS+0*8(r16)			#Perform FPU test here
 		lfd	f2,PP_FREGS+1*8(r16)
 		lfd	f3,PP_FREGS+2*8(r16)
 		lfd	f4,PP_FREGS+3*8(r16)
@@ -619,7 +628,18 @@ RunPPC68K:
 		stw	r2,20(r1)
 		blrl
 		
-		stw	r3,PP_REGS+0*4(r16)
+		lwz	r17,PP_FLAGS(r16)
+		andi.	r0,r17,PPF_LINEAR
+		beq	.NotLinear2
+
+		mr	r22,r5
+		mr	r23,r6
+		mr	r24,r7
+		mr	r25,r8
+		mr	r26,r9
+		mr	r27,r10
+		
+.NotLinear2:	stw	r3,PP_REGS+0*4(r16)
 		stw	r4,PP_REGS+1*4(r16)
 		stw	r22,PP_REGS+2*4(r16)
 		stw	r23,PP_REGS+3*4(r16)
@@ -648,6 +668,7 @@ RunPPC68K:
 		b	.ExitRunPPC		
 		
 .NotStandard:	li	r3,PPERR_ASYNCERR
+		illegal
 .ExitRunPPC:	lwz	r31,0(r13)
 		lwz	r30,4(r13)
 		lwz	r29,8(r13)
@@ -811,6 +832,7 @@ CreatePPCTask68K:
 #********************************************************************************************
 
 CausePPCInterrupt68K:
+		illegal
 		li	r3,12
 		blr
 
@@ -1307,7 +1329,8 @@ ChangeMMU:
 
 #********************************************************************************************
 
-GetInfo:					#NEEDS IMPLEMENTATION
+GetInfo:	
+				#NEEDS IMPLEMENTATION
 		li	r3,0
 		blr
 
@@ -1657,27 +1680,6 @@ IsExceptionMode:
 		blr
 
 #********************************************************************************************
-
-CreateMsgFramePPC:
-		illegal
-		li	r3,108
-		blr
-
-#********************************************************************************************
-
-SendMsgFramePPC:
-		illegal
-		li	r3,109
-		blr
-
-#********************************************************************************************
-
-FreeMsgFramePPC:
-		illegal
-		li	r3,110
-		blr
-
-#********************************************************************************************
 #********************************************************************************************
 
 		.rodata
@@ -1886,9 +1888,6 @@ VECTOR68K:
 .long	AddUniquePortPPC
 .long	AddUniqueSemaphorePPC
 .long	IsExceptionMode
-.long	CreateMsgFramePPC
-.long	SendMsgFramePPC
-.long	FreeMsgFramePPC
 .long	-1
 
 #********************************************************************************************
