@@ -309,9 +309,9 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 		b	.GoExitOpen
 
 #********************************************************************************************
-
+		
 ExceptionHandler:
-		prolog
+		prolog	100
 		lis	r0,TRAPNUM_INST_SEGMENT_VIOLATION
 		cmpw	r5,r0
 		beq	.ItsAnISI
@@ -325,34 +325,23 @@ ExceptionHandler:
 		stwu	r26,-4(r13)
 		stwu	r25,-4(r13)
 		lwz	r31,ExceptionContext_ip(r3)
+		rlwinm.	r29,r31,0,0,19
 		li	r3,0
+		beq	.ExcDone
 		lis	r29,WarpLibBase@ha
 		lwz	r29,WarpLibBase@l(r29)
 		lwz	r29,libwarp_MachineFlag(r29)
 		cmpwi	r29,MACHF_PPC500LIKE
+		lwz	r29,0(r31)				#Force TLB update
 		beq	.ISIPPC500
-		rlwinm.	r31,r31,0,0,19
-		beq	.ExcDone
-		li	r29,0
-		b	.FirstTBL
 		
-.NextTBL:	addi	r29,r29,1
-		cmpwi	r29,64
-		beq	.ExcDone
-		
-.FirstTBL:	tlbrehi	r28,r29
+		tlbsx.	r29,r0,r31
+		bne	.ExcDone
 		tlbre	r26,r29,2
-		andi.	r25,r28,TLB_VALID
-		beq	.NextTBL
-		rlwinm	r25,r28,0,0,TLB_EPN
-		cmpw	r25,r31
-		bne	.NextTBL
 		ori	r26,r26,TLB_UX|TLB_SX
-		tlbwe	r26,r29,2
-		sync
-		isync
+		tlbwe 	r26,r29,2		
 		li	r3,1
-
+	
 .ExcDone:	lwz	r25,0(r13)
 		lwz	r26,4(r13)
 		lwz	r28,8(r13)
@@ -428,6 +417,14 @@ IOpen:
 		stwu	r28,-4(r13)
 
 		lwz	r31,Data_LibBase(r3)
+		lwz	r30,libwarp_IExec(r31)
+		
+		li	r4,0
+		li	r5,-1
+		li	r6,CACRF_ClearI
+		
+		CALLOS	r30,CacheClearE
+		
 		lhz	r9,lib_OpenCnt(r31)
 		addi	r9,r9,1
 		sth	r9,lib_OpenCnt(r31)
@@ -437,7 +434,6 @@ IOpen:
 		lwz	r4,libwarp_MachineFlag(r31)
 		mr.	r4,r4
 		li	r28,1
-		lwz	r30,libwarp_IExec(r31)
 		beq	.ItsPPC600
 		
 		lis     r4,TRAPNUM_INST_SEGMENT_VIOLATION
@@ -572,10 +568,6 @@ RunPPC68K:
 		lwz	r3,REG68K_A6(r3)
 		lwz	r31,libwarp_IExec(r3)
 		mr	r26,r3
-		
-		lwz	r27,libwarp_MachineFlag(r26)
-		mr.	r27,r27
-		bne	.NoFlushNeeded
 		
 		lwz	r27,libwarp_CachedTask(r26)
 		li	r4,0
