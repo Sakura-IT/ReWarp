@@ -29,7 +29,7 @@
 .set libwarp_sr6,92
 .set libwarp_sr7,96
 .set libwarp_DebugFlag,100
-.set libwarp_pad1,101
+.set libwarp_CacheFlag,101
 .set libwarp_pad2,102
 .set libwarp_pad3,103
 .set libwarp_PosSize,104
@@ -104,6 +104,7 @@
 .set MEMF_CHIP,			0x00000002
 .set MEMF_FAST,			0x00000004
 .set MEMF_CLEAR,		0x00010000
+.set MEMF_SHARED,		0x00001000
 .set MEMF_PPC,			0x00002000
 .set MEMF_REVERSE,		0x00040000
 
@@ -670,6 +671,7 @@
 .set ASO_NoTrack,			0x80000001
 .set ASOIOR_ReplyPort,			0x8000000b
 .set ASOIOR_Size,			0x8000000a
+.set ASOPORT_Size,			0x8000000a
 
 .set GMIT_Machine,0x80000001
 .set MACHINETYPE_UNKNOWN,	0

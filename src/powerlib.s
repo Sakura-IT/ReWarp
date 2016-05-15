@@ -59,6 +59,7 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 		addi	r9,r9,IDString@l
 		li	r0,0
 		stb	r11,LN_PRI(r3)
+		stb	r0,libwarp_CacheFlag(r3)
 		sth	r0,lib_Revision(r3)
 		
 #		li	r0,1					#Debug ON
@@ -121,6 +122,21 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 		la	r4,libwarp_StartTimeVal(r31)
 		CALLOS	r23,GetSysTime
 		
+		ldaddr	r4,DosLib
+		li	r5,52
+		CALLOS	r29,OpenLibrary
+		mr.	r28,r3
+		beq	.ErrorExp
+		
+		mr	r4,r28
+		mr	r5,r27
+		li	r6,1
+		li	r7,0
+		CALLOS	r29,GetInterface
+		mr.	r28,r3
+		beq	.ErrorExp
+		stw	r28,libwarp_IDOS(r31)
+				
 		ldaddr	r4,ExpLib
 		li	r5,52
 		CALLOS	r29,OpenLibrary
@@ -353,7 +369,7 @@ ExceptionHandler:
 		lwz	r30,16(r13)
 		lwz	r31,20(r13)
 		addi	r13,r13,24		
-		b	.ExcExit
+		b	.ExcExit	
 		
 .ISIPPC500:	mfmsr	r25
 		rlwinm	r26,r25,27,31,31			#Get MSR[IS]
@@ -525,7 +541,16 @@ IOpen:
 		
 		CALLOS	r30,CacheClearE
 		
-		lhz	r9,lib_OpenCnt(r31)
+		lwz	r4,libwarp_MachineFlag(r31)
+		mr.	r4,r4
+		beq	.NoTrapSet
+
+		lis     r4,TRAPNUM_INST_SEGMENT_VIOLATION
+		ldaddr	r5,ExceptionHandler
+		lis     r6,TRAPNUM_INST_SEGMENT_VIOLATION
+		CALLOS	r30,SetTaskTrap	
+		
+.NoTrapSet:	lhz	r9,lib_OpenCnt(r31)
 		addi	r9,r9,1
 		sth	r9,lib_OpenCnt(r31)
 		cmpwi	r9,1
@@ -535,12 +560,7 @@ IOpen:
 		mr.	r4,r4
 		li	r28,1
 		beq	.ItsPPC600
-		
-		lis     r4,TRAPNUM_INST_SEGMENT_VIOLATION
-		ldaddr	r5,ExceptionHandler
-		lis     r6,TRAPNUM_INST_SEGMENT_VIOLATION
-		CALLOS	r30,SetTaskTrap		
-				
+			
 .GoExitOpen:	mr	r3,r31
 
 		lwz	r28,0(r13)
@@ -562,7 +582,18 @@ IClose:
 		stwu	r28,-4(r13)
 		
 		lwz	r31,Data_LibBase(r3)
-		lhz	r9,lib_OpenCnt(r31)
+		lwz	r30,libwarp_IExec(r31)
+		
+		lwz	r4,libwarp_MachineFlag(r31)
+		mr.	r4,r4
+		beq	.NoRemoveTrap
+		
+		lis	r4,TRAPNUM_INST_SEGMENT_VIOLATION
+		li	r5,0
+		li	r6,0
+		CALLOS	r30,SetTaskTrap
+		
+.NoRemoveTrap:	lhz	r9,lib_OpenCnt(r31)
 		subi	r9,r9,1
 		sth	r9,lib_OpenCnt(r31)
 		cmpwi	r9,0
@@ -572,13 +603,7 @@ IClose:
 		lwz	r4,libwarp_MachineFlag(r31)
 		mr.	r4,r4
 		li	r28,0
-		lwz	r30,libwarp_IExec(r31)
 		beq	.ItsPPC600
-		
-		lis	r4,TRAPNUM_INST_SEGMENT_VIOLATION
-		li	r5,0
-		li	r6,0
-		CALLOS	r30,SetTaskTrap
 		
 .GoBackClose:	lbz	r0,lib_Flags(r31)
 		andi.	r9,r0,LIBF_DELEXP
@@ -726,6 +751,7 @@ RunPPC68K:
 		
 .JustCode:	mtlr	r17
 		stw	r2,20(r1)
+		lwz	r17,0(r17)				#Force TBL
 		blrl
 		
 		lwz	r17,PP_FLAGS(r16)
@@ -836,8 +862,20 @@ GetCPU68K:
 #********************************************************************************************
 
 PowerDebugMode68K:
-		li	r3,0
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		lwz	r31,REG68K_A6(r3)
+		lwz	r30,REG68K_D0(r3)
+		stb	r30,libwarp_DebugFlag(r31)
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
@@ -947,18 +985,31 @@ Run68K:
 		stwu	r29,-4(r13)
 		stwu	r28,-4(r13)
 		stwu	r27,-4(r13)
+		stwu	r26,-4(r13)
+		stwu	r25,-4(r13)
 		
 		mr	r31,r4
 		mr	r30,r3
+		li	r25,0
 		
 		lwz	r5,PP_OFFSET(r31)
 		lwz	r6,PP_FLAGS(r31)
 		lwz	r4,PP_CODE(r31)
+		mr	r26,r4
 		ldaddr	r27,FRun68K	
 		bl	.DebugStartOutPut
 		
 		lwz	r29,libwarp_IExec(r30)
-		lwz	r27,PP_FLAGS(r31)
+		lwz	r27,Data_LibBase(r29)
+		cmpw	r27,r26
+		beq	.CheckExec	
+	
+.ReturnECheck:	lwz	r27,libwarp_IDOS(r30)
+		lwz	r27,Data_LibBase(r27)
+		cmpw	r27,r26
+		beq	.CheckDOS
+		
+.ReturnACheck:	lwz	r27,PP_FLAGS(r31)
 		mr.	r27,r27
 		bne	.RunError68
 		
@@ -1011,7 +1062,12 @@ Run68K:
 		li	r6,128
 		CALLOS	r29,CopyMem
 
-		li	r3,0
+		mr.	r25,r25
+		beq	.NoCacheClear
+
+		CALLOS	r29,CacheClearU
+
+.NoCacheClear:	li	r3,0
 		b	.RunExit
 		
 .RunError68:	illegal
@@ -1023,14 +1079,35 @@ Run68K:
 		bl	.DebugEndOutPut
 		mr	r3,r28
 		
-		lwz	r27,0(r13)
-		lwz	r28,4(r13)
-		lwz	r29,8(r13)
-		lwz	r30,12(r13)
-		lwz	r31,16(r13)
-		addi	r13,r13,20
+		lwz	r25,0(r13)
+		lwz	r26,4(r13)
+		lwz	r27,8(r13)
+		lwz	r28,12(r13)
+		lwz	r29,16(r13)
+		lwz	r30,20(r13)
+		lwz	r31,24(r13)
+		addi	r13,r13,28
 
 		epilog
+
+.CheckExec:	lwz	r27,PP_OFFSET(r31)
+		cmpwi	r27,_LVOOpenLibrary
+		beq	.SetCFlag
+		cmpwi	r27,_LVOOldOpenLibrary
+		bne	.ReturnECheck
+.SetCFlag:	li	r25,1
+		b	.ReturnACheck
+
+.CheckDOS:	lwz	r27,PP_OFFSET(r31)
+		cmpwi	r27,_LVOLoadSeg
+		beq	.SetCFlag
+		cmpwi	r27,_LVODOSPrivate1
+		beq	.SetCFlag
+		cmpwi	r27,_LVOInternalLoadSeg
+		beq	.SetCFlag
+		cmpwi	r27,_LVONewLoadSeg
+		beq	.SetCFlag
+		b	.ReturnACheck
 
 #********************************************************************************************
 
@@ -1491,16 +1568,52 @@ GetInfo:
 #********************************************************************************************
 
 CreateMsgPortPPC:
-		illegal
-		li	r3,63
-		blr
+
+		prolog
+
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		stwu	r29,-4(r13)
+		
+		mr	r30,r3
+
+		li      r29,100
+		li      r4,ASOT_PORT
+		loadreg	r0,ASOPORT_Size
+		lwz	r31,libwarp_IExec(r30)
+		stw     r0,8(r1)
+		li      r0,TAG_DONE
+		stw     r0,16(r1)
+		stw     r29,12(r1)
+		CALLOS	r31,AllocSysObjectTags
+
+		lwz	r29,0(r13)
+		lwz	r30,4(r13)
+		lwz	r31,8(r13)
+		addi	r13,r13,12
+
+		epilog
 
 #********************************************************************************************
 
 DeleteMsgPortPPC:
-		illegal
-		li	r3,64
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		mr      r5,r4
+		li      r4,ASOT_PORT
+		
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,FreeSysObject
+
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+
+		epilog
 
 #********************************************************************************************
 
@@ -1526,9 +1639,21 @@ FindPortPPC:
 #********************************************************************************************
 
 WaitPortPPC:
-		illegal
-		li	r3,68
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,WaitPort
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
@@ -1567,23 +1692,76 @@ CopyMemPPC:
 #********************************************************************************************
 
 AllocXMsgPPC:
-		illegal
-		li	r3,74
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		stwu	r29,-4(r13)
+		stwu	r28,-4(r13)
+		
+		mr	r30,r3		
+		mr      r29,r5
+		
+		loadreg	r5,MEMF_SHARED|MEMF_CLEAR
+		addi    r28,r4,MN_SIZE
+		lwz	r31,libwarp_IExec(r30)
+		mr      r4,r28
+		
+		CALLOS	r31,AllocVec
+		
+		mr.     r30,r3
+		beq-    .NoMsgMem
+		sth     r28,MN_LENGTH(r30)
+		stw     r29,MN_REPLYPORT(r30)
+		
+.NoMsgMem:	lwz	r28,0(r13)
+		lwz	r29,4(r13)
+		lwz	r30,8(r13)
+		lwz	r31,12(r13)
+		addi	r13,r13,16
+
+		epilog
+
 
 #********************************************************************************************
 
 FreeXMsgPPC:
-		illegal
-		li	r3,75
-		blr
+		prolog
+
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+
+		mr	r30,r3
+		lwz	r31,libwarp_IExec(r30)
+		
+		CALLOS	r31,FreeVec
+
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+
+		epilog
 
 #********************************************************************************************
 
 PutXMsgPPC:
-		illegal
-		li	r3,76
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		lwz	r31,libwarp_IExec(r30)
+		li	r0,NT_XMSGPPC
+		stb	r0,LN_TYPE(r5)
+		
+		CALLOS	r31,PutMsg
+    		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
@@ -1876,6 +2054,8 @@ ExpLib:
 .byte	"expansion.library",0
 TimerDev:
 .byte	"timer.device",0
+DosLib:
+.byte	"dos.library",0
 MainName:
 .byte	"main",0
 

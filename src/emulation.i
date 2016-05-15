@@ -32,6 +32,13 @@
 
 .set	EmuWS,			674
 
+.set	_LVOOpenLibrary,	-552
+.set	_LVOOldOpenLibrary,	-408
+.set	_LVOLoadSeg,		-150
+.set	_LVODOSPrivate1,	-162
+.set	_LVOInternalLoadSeg,	-756
+.set 	_LVONewLoadSeg,		-768
+
 .set	ET_Offset,		0x80000015
 
 .macro	jmp	function

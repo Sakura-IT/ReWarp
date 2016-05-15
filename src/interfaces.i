@@ -25,6 +25,8 @@
 .set Enable,			252
 .set FindTask,			260
 .set SetSignal,			288
+.set PutMsg,			328
+.set WaitPort,			340
 .set AddSemaphore,		348
 .set AttemptSemaphore,		352
 .set FindSemaphore,		360
@@ -37,11 +39,13 @@
 .set GetInterface,		448
 .set DropInterface,		456
 .set CacheClearE,		492
+.set CacheClearU,		496
 .set OpenDevice,		504
 .set SuperState,		576
 .set UserState,			580
 .set SetTaskTrap,		588
 .set AllocSysObjectTags,	704
+.set FreeSysObject,		708
 .set EmulateTags,		744
 .set DebugPrintF,		748
 .set GetCPUInfoTags,		768
