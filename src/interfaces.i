@@ -43,6 +43,7 @@
 .set SetTaskTrap,		588
 .set AllocSysObjectTags,	704
 .set EmulateTags,		744
+.set DebugPrintF,		748
 .set GetCPUInfoTags,		768
 
 # Timer
@@ -51,3 +52,6 @@
 
 # Expansion
 .set GetMachineInfoTags,	168
+
+# Dos
+.set FPutC,			292
