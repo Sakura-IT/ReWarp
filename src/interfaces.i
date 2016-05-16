@@ -56,7 +56,9 @@
 .set GetCPUInfoTags,		768
 
 # Timer
+.set AddTime,			76
 .set SubTime,			80
+.set CmpTime,			84
 .set GetSysTime,		92
 
 # Expansion

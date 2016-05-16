@@ -1403,15 +1403,19 @@ ObtainSemaphorePPC:
 		
 		stwu	r31,-4(r13)
 		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
 		
 		mr	r30,r3
+		ldaddr	r27,FObtainSemaphorePPC	
+		bl	.DebugStartOutPut
 		
 		lwz	r31,libwarp_IExec(r30)
 		CALLOS	r31,ObtainSemaphore
 		
-		lwz	r30,0(r13)
-		lwz	r31,4(r13)
-		addi	r13,r13,8
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		lwz	r31,8(r13)
+		addi	r13,r13,12
 		
 		epilog
 
@@ -1445,15 +1449,19 @@ ReleaseSemaphorePPC:
 		
 		stwu	r31,-4(r13)
 		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
 		
 		mr	r30,r3
+		ldaddr	r27,FReleaseSemaphorePPC
+		bl	.DebugStartOutPut
 		
 		lwz	r31,libwarp_IExec(r30)
 		CALLOS	r31,ReleaseSemaphore
-		
-		lwz	r30,0(r13)
-		lwz	r31,4(r13)
-		addi	r13,r13,8
+
+		lwz	r27,0(r13)		
+		lwz	r30,4(r13)
+		lwz	r31,8(r13)
+		addi	r13,r13,12
 		
 		epilog
 
@@ -1821,8 +1829,11 @@ CreateMsgPortPPC:
 		stwu	r31,-4(r13)
 		stwu	r30,-4(r13)
 		stwu	r29,-4(r13)
+		stwu	r27,-4(r13)
 		
 		mr	r30,r3
+		ldaddr	r27,FCreateMsgPortPPC
+		bl	.DebugStartOutPut
 
 		li      r29,100
 		li      r4,ASOT_PORT
@@ -1833,11 +1844,14 @@ CreateMsgPortPPC:
 		stw     r0,16(r1)
 		stw     r29,12(r1)
 		CALLOS	r31,AllocSysObjectTags
+		
+		bl	.DebugEndOutPut
 
-		lwz	r29,0(r13)
-		lwz	r30,4(r13)
-		lwz	r31,8(r13)
-		addi	r13,r13,12
+		lwz	r27,0(r13)
+		lwz	r29,4(r13)
+		lwz	r30,8(r13)
+		lwz	r31,12(r13)
+		addi	r13,r13,16
 
 		epilog
 
@@ -1848,17 +1862,22 @@ DeleteMsgPortPPC:
 		
 		stwu	r31,-4(r13)
 		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
 		
 		mr	r30,r3
+		ldaddr	r27,FDeleteMsgPortPPC
+		bl	.DebugStartOutPut
+		
 		mr      r5,r4
 		li      r4,ASOT_PORT
 		
 		lwz	r31,libwarp_IExec(r30)
 		CALLOS	r31,FreeSysObject
 
-		lwz	r30,0(r13)
-		lwz	r31,4(r13)
-		addi	r13,r13,8
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		lwz	r31,8(r13)
+		addi	r13,r13,12
 
 		epilog
 
@@ -1890,15 +1909,19 @@ WaitPortPPC:
 		
 		stwu	r31,-4(r13)
 		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
 		
 		mr	r30,r3
+		ldaddr	r27,FWaitPortPPC
+		bl	.DebugStartOutPut
 		
 		lwz	r31,libwarp_IExec(r30)
 		CALLOS	r31,WaitPort
 		
-		lwz	r30,0(r13)
-		lwz	r31,4(r13)
-		addi	r13,r13,8
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		lwz	r31,8(r13)
+		addi	r13,r13,12
 		
 		epilog
 
@@ -1916,15 +1939,19 @@ GetMsgPPC:
 		
 		stwu	r31,-4(r13)
 		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
 		
 		mr	r30,r3
+		ldaddr	r27,FGetMsgPPC
+		bl	.DebugStartOutPut
 		
 		lwz	r31,libwarp_IExec(r30)
 		CALLOS	r31,GetMsg
 		
-		lwz	r30,0(r13)
-		lwz	r31,4(r13)
-		addi	r13,r13,8
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		lwz	r31,8(r13)
+		addi	r13,r13,12
 		
 		epilog
 
@@ -1957,9 +1984,12 @@ AllocXMsgPPC:
 		stwu	r30,-4(r13)
 		stwu	r29,-4(r13)
 		stwu	r28,-4(r13)
+		stwu	r27,-4(r13)
 		
 		mr	r30,r3		
 		mr      r29,r5
+		ldaddr	r27,FAllocXMsgPPC
+		bl	.DebugStartOutPut
 		
 		loadreg	r5,MEMF_SHARED|MEMF_CLEAR
 		addi    r28,r4,MN_SIZE
@@ -1973,11 +2003,14 @@ AllocXMsgPPC:
 		sth     r28,MN_LENGTH(r30)
 		stw     r29,MN_REPLYPORT(r30)
 		
-.NoMsgMem:	lwz	r28,0(r13)
-		lwz	r29,4(r13)
-		lwz	r30,8(r13)
-		lwz	r31,12(r13)
-		addi	r13,r13,16
+.NoMsgMem:	bl	.DebugEndOutPut
+		
+		lwz	r27,0(r13)
+		lwz	r28,4(r13)
+		lwz	r29,8(r13)
+		lwz	r30,12(r13)
+		lwz	r31,16(r13)
+		addi	r13,r13,20
 
 		epilog
 
@@ -1989,15 +2022,19 @@ FreeXMsgPPC:
 
 		stwu	r31,-4(r13)
 		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
 
 		mr	r30,r3
-		lwz	r31,libwarp_IExec(r30)
+		ldaddr	r27,FFreeXMsgPPC
+		bl	.DebugStartOutPut		
 		
+		lwz	r31,libwarp_IExec(r30)		
 		CALLOS	r31,FreeVec
 
-		lwz	r30,0(r13)
-		lwz	r31,4(r13)
-		addi	r13,r13,8
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		lwz	r31,8(r13)
+		addi	r13,r13,12
 
 		epilog
 
@@ -2008,17 +2045,21 @@ PutXMsgPPC:
 		
 		stwu	r31,-4(r13)
 		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
 		
 		mr	r30,r3
+		ldaddr	r27,FPutXMsgPPC
+		bl	.DebugStartOutPut
+		
 		lwz	r31,libwarp_IExec(r30)
 		li	r0,NT_XMSGPPC
-		stb	r0,LN_TYPE(r5)
-		
+		stb	r0,LN_TYPE(r5)		
 		CALLOS	r31,PutMsg				#rewrite this function to preserve correct node type?
 		
-		lwz	r30,0(r13)
-		lwz	r31,4(r13)
-		addi	r13,r13,8
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		lwz	r31,8(r13)
+		addi	r13,r13,12
 		
 		epilog
 
@@ -2053,9 +2094,21 @@ GetSysTimePPC:
 #********************************************************************************************
 
 AddTimePPC:
-		illegal
-		li	r3,78
-		blr
+		prolog
+
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		
+		lwz	r31,libwarp_ITimer(r30)		
+		CALLOS	r31,AddTime
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog		
 
 #********************************************************************************************
 
@@ -2243,15 +2296,19 @@ DeletePoolPPC:
 		
 		stwu	r31,-4(r13)
 		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
 		
 		mr	r30,r3
+		ldaddr	r27,FDeletePoolPPC	
+		bl	.DebugStartOutPut		
 		
 		lwz	r31,libwarp_IExec(r30)
 		CALLOS	r31,DeletePool
 		
-		lwz	r30,0(r13)
-		lwz	r31,4(r13)
-		addi	r13,r13,8
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		lwz	r31,8(r13)
+		addi	r13,r13,12
 		
 		epilog
 
@@ -2287,15 +2344,19 @@ FreePooledPPC:
 		
 		stwu	r31,-4(r13)
 		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
 		
 		mr	r30,r3
+		ldaddr	r27,FFreePooledPPC	
+		bl	.DebugStartOutPut
 		
 		lwz	r31,libwarp_IExec(r30)
 		CALLOS	r31,FreePooled
 		
-		lwz	r30,0(r13)
-		lwz	r31,4(r13)
-		addi	r13,r13,8
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		lwz	r31,8(r13)
+		addi	r13,r13,12
 		
 		epilog
 
