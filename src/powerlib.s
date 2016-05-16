@@ -136,7 +136,22 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 		mr.	r28,r3
 		beq	.ErrorExp
 		stw	r28,libwarp_IDOS(r31)
-				
+						
+		ldaddr	r4,UtilLib
+		li	r5,52
+		CALLOS	r29,OpenLibrary
+		mr.	r28,r3
+		beq	.ErrorExp
+		
+		mr	r4,r28
+		mr	r5,r27
+		li	r6,1
+		li	r7,0
+		CALLOS	r29,GetInterface
+		mr.	r28,r3
+		beq	.ErrorExp
+		stw	r28,libwarp_IUtility(r31)
+
 		ldaddr	r4,ExpLib
 		li	r5,52
 		CALLOS	r29,OpenLibrary
@@ -744,7 +759,6 @@ RunPPC68K:
 		
 .JustCode:	mtlr	r17
 		stw	r2,20(r1)
-		mr	r15,r31
 		lwz	r17,0(r17)				#Force TBL
 		blrl
 		
@@ -1195,16 +1209,98 @@ FreeVecPPC:						#NEEDS MEMLIST
 #********************************************************************************************
 
 CreateTaskPPC:
+		prolog
+
+		stw	r4,200(r1)
+		addi	r28,r1,200
+		
+		li	r21,0
+		li	r22,0
+		li	r23,0
+		li	r24,0
+		li	r25,0
+
+		mr	r30,r3
+		lwz	r31,libwarp_IExec(r30)
+		lwz	r29,libwarp_IUtility(r30)
+		
+		li	r4,0
+		CALLOS	r31,FindTask
+		
+		ldaddr	r19,JumpTable
+		
+.DoNextTag:	mr	r4,r28
+		CALLOS	r29,NextTagItem
+		mr.	r26,r3
+		beq	.NoMoreTags
+		
+		lwz	r20,0(r26)
+		subis	r0,r20,TASKATTR_CODE@h
+		cmplwi	r0,18
+		bgt	.DoNextTag
+		
+		rlwinm	r0,r0,2,0,29			#jumptable
+		lwzx	r18,r19,r0
+		mtctr	r18
+		bctr
+		
+		lwz	r25,4(r26)
+		cmpwi	r25,0
+		beq	.DoNextTag
+		
+.NoMoreTags:	cmpw	r24,0
+		bne	.notyetimplemented
+		
+		li	r3,0		
+		
+		epilog
+.notyetimplemented:
+tag0:		
+tag1:
+tag2:
+tag3:
+tag4:
+tag5:
+tag6:
+tag7:
+tag8:
+tag9:
+tag10:
+tag11:
+tag12:
+tag13:
+tag14:
+tag15:
+tag16:
+tag17:
+tag18:
 		illegal
-		li	r3,19
-		blr
+		b	.DoNextTag
+
+
 
 #********************************************************************************************
 
 DeleteTaskPPC:
-		illegal
-		li	r3,20
-		blr
+		prolog
+
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		stwu	r29,-4(r13)
+
+		lhz	r29,lib_OpenCnt(r30)
+		lwz	r31,libwarp_IExec(r30)
+		subi	r29,r29,1
+		sth	r29,lib_OpenCnt(r30)
+		
+		CALLOS	r31,DeleteTask
+
+		lwz	r29,0(r13)
+		lwz	r30,4(r13)
+		lwz	r31,8(r13)
+		addi	r13,r13,12
+		
+		epilog
 
 #********************************************************************************************
 
@@ -1448,44 +1544,118 @@ EnqueuePPC:
 #********************************************************************************************
 
 FindNamePPC:
-		illegal
-		li	r3,37
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		lwz	r31,libwarp_IExec(r30)
+		
+		CALLOS	r31,FindName
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 FindTagItemPPC:
-		illegal
-		li	r3,38
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		lwz	r31,libwarp_IUtility(r30)
+		
+		CALLOS	r31,FindTagItem
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 GetTagDataPPC:
-		illegal
-		li	r3,39
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		lwz	r31,libwarp_IUtility(r30)
+		
+		CALLOS	r31,GetTagData
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 NextTagItemPPC:
-		illegal
-		li	r3,40
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		lwz	r31,libwarp_IUtility(r30)
+		
+		CALLOS	r31,NextTagItem
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 AllocSignalPPC:
-		illegal
-		li	r3,41
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		extsb	r4,r4
+		lwz	r31,libwarp_IExec(r30)
+		
+		CALLOS	r31,AllocSignal
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 FreeSignalPPC:
-		illegal
-		li	r3,42
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		extsb	r4,r4
+		lwz	r31,libwarp_IExec(r30)
+		
+		CALLOS	r31,FreeSignal
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
@@ -2172,6 +2342,8 @@ TimerDev:
 .byte	"timer.device",0
 DosLib:
 .byte	"dos.library",0
+UtilLib:
+.byte	"utility.library",0
 MainName:
 .byte	"main",0
 
@@ -2279,6 +2451,12 @@ FIsExceptionMode:		.byte	"IsExceptionMode",0
 FAllocatePPC:			.byte	"AllocatePPC",0
 FDeallocatePPC:			.byte	"DeallocatePPC",0
 .align	2
+
+#********************************************************************************************
+
+JumpTable:
+.long	tag0,tag1,tag2,tag3,tag4,tag5,tag6,tag7,tag8,tag9
+.long	tag10,tag11,tag12,tag13,tag14,tag15,tag16,tag17,tag18
 
 #********************************************************************************************
 

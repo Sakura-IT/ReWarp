@@ -17,22 +17,23 @@
 .set libwarp_IExec,40
 .set libwarp_IDOS,44
 .set libwarp_ITimer,48
-.set libwarp_CachedTask,52
-.set libwarp_MachineFlag,56
-.set libwarp_StartTimeVal,60
-.set libwarp_sr0,68
-.set libwarp_sr1,72
-.set libwarp_sr2,76
-.set libwarp_sr3,80
-.set libwarp_sr4,84
-.set libwarp_sr5,88
-.set libwarp_sr6,92
-.set libwarp_sr7,96
-.set libwarp_DebugFlag,100
-.set libwarp_CacheFlag,101
-.set libwarp_pad2,102
-.set libwarp_pad3,103
-.set libwarp_PosSize,104
+.set libwarp_IUtility,52
+.set libwarp_CachedTask,56
+.set libwarp_MachineFlag,60
+.set libwarp_StartTimeVal,64
+.set libwarp_sr0,72
+.set libwarp_sr1,76
+.set libwarp_sr2,80
+.set libwarp_sr3,84
+.set libwarp_sr4,88
+.set libwarp_sr5,92
+.set libwarp_sr6,96
+.set libwarp_sr7,100
+.set libwarp_DebugFlag,104
+.set libwarp_CacheFlag,105
+.set libwarp_pad2,106
+.set libwarp_pad3,107
+.set libwarp_PosSize,108
 
 .set EXCDATA_TYPE,8				#Always NT_INTERRUPT
 .set EXCDATA_PRI,9				#This

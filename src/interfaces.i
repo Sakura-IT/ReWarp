@@ -15,6 +15,7 @@
 .set CreatePool,		132
 .set DeletePool,		140
 .set Enqueue,			144
+.set FindName,			148
 .set FreePooled,		168
 .set FreeVec,			172
 .set Insert,			188
@@ -24,6 +25,8 @@
 .set Disable,			248
 .set Enable,			252
 .set FindTask,			260
+.set AllocSignal,		276
+.set FreeSignal,		280
 .set SetSignal,			288
 .set GetMsg,			324
 .set PutMsg,			328
@@ -35,6 +38,7 @@
 .set ObtainSemaphore,		368
 .set ReleaseSemaphore,		384
 .set RemSemaphore,		392
+.set DeleteTask,		408
 .set OpenLibrary,		424
 .set CloseLibrary,		428
 .set GetInterface,		448
@@ -57,6 +61,11 @@
 
 # Expansion
 .set GetMachineInfoTags,	168
+
+#Utility
+.set FindTagItem,		96
+.set GetTagData,		104
+.set NextTagItem,		112
 
 # Dos
 .set FPutC,			292
