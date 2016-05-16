@@ -462,6 +462,9 @@ ExceptionHandler:
 		CALLOS	r31,DebugPrintF
 		
 		mr	r4,r28
+		mr	r5,r26
+		mr	r6,r25
+		mr	r7,r24
 		
 .NoDebugStart:	lwz	r23,0(r13)
 		lwz	r24,4(r13)
@@ -1316,6 +1319,8 @@ FindTaskPPC:
 		
 		lwz	r9,libwarp_IExec(r30)
 		CALLOS	r9,FindTask
+		
+		bl	.DebugEndOutPut
 		
 		lwz	r27,0(r13)
 		lwz	r30,4(r13)
@@ -2209,23 +2214,25 @@ CauseInterrupt:
 CreatePoolPPC:
 		prolog
 		
+		stwu	r31,-4(r13)
 		stwu	r30,-4(r13)
 		stwu	r27,-4(r13)
 		
 		mr	r30,r3
-		ldaddr	r27,FRun68K	
+		ldaddr	r27,FCreatePoolPPC	
 		bl	.DebugStartOutPut
 		
 		loadreg	r0,MEMF_CLEAR|MEMF_CHIP|MEMF_REVERSE
 		and	r4,r4,r0
-		lwz	r9,libwarp_IExec(r30)
-		CALLOS	r9,CreatePool
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,CreatePool
 		
 		bl	.DebugEndOutPut
 		
 		lwz	r27,0(r13)
 		lwz	r30,4(r13)
-		addi	r13,r13,8
+		lwz	r31,8(r13)
+		addi	r13,r13,12
 		
 		epilog
 
@@ -2258,7 +2265,7 @@ AllocPooledPPC:
 		stwu	r27,-4(r13)
 
 		mr	r30,r3		
-		ldaddr	r27,FRun68K	
+		ldaddr	r27,FAllocPooledPPC	
 		bl	.DebugStartOutPut
 		
 		lwz	r31,libwarp_IExec(r30)
