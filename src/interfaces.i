@@ -25,6 +25,7 @@
 .set Enable,			252
 .set FindTask,			260
 .set SetSignal,			288
+.set GetMsg,			324
 .set PutMsg,			328
 .set WaitPort,			340
 .set AddSemaphore,		348

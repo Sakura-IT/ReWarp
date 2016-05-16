@@ -540,17 +540,8 @@ IOpen:
 		li	r6,CACRF_ClearI
 		
 		CALLOS	r30,CacheClearE
-		
-		lwz	r4,libwarp_MachineFlag(r31)
-		mr.	r4,r4
-		beq	.NoTrapSet
-
-		lis     r4,TRAPNUM_INST_SEGMENT_VIOLATION
-		ldaddr	r5,ExceptionHandler
-		lis     r6,TRAPNUM_INST_SEGMENT_VIOLATION
-		CALLOS	r30,SetTaskTrap	
-		
-.NoTrapSet:	lhz	r9,lib_OpenCnt(r31)
+				
+		lhz	r9,lib_OpenCnt(r31)
 		addi	r9,r9,1
 		sth	r9,lib_OpenCnt(r31)
 		cmpwi	r9,1
@@ -584,16 +575,7 @@ IClose:
 		lwz	r31,Data_LibBase(r3)
 		lwz	r30,libwarp_IExec(r31)
 		
-		lwz	r4,libwarp_MachineFlag(r31)
-		mr.	r4,r4
-		beq	.NoRemoveTrap
-		
-		lis	r4,TRAPNUM_INST_SEGMENT_VIOLATION
-		li	r5,0
-		li	r6,0
-		CALLOS	r30,SetTaskTrap
-		
-.NoRemoveTrap:	lhz	r9,lib_OpenCnt(r31)
+		lhz	r9,lib_OpenCnt(r31)
 		subi	r9,r9,1
 		sth	r9,lib_OpenCnt(r31)
 		cmpwi	r9,0
@@ -694,11 +676,22 @@ RunPPC68K:
 		lwz	r31,libwarp_IExec(r3)
 		mr	r26,r3
 		
-		lwz	r27,libwarp_CachedTask(r26)
+		lwz	r4,libwarp_MachineFlag(r26)
+		mr.	r4,r4
+		beq	.NoTrapSet
+		
+		lis     r4,TRAPNUM_INST_SEGMENT_VIOLATION
+		ldaddr	r5,ExceptionHandler
+		lis     r6,TRAPNUM_INST_SEGMENT_VIOLATION
+		CALLOS	r31,SetTaskTrap	
+				
+.NoTrapSet:	lwz	r27,libwarp_CachedTask(r26)
 		li	r4,0
 		CALLOS	r31,FindTask
 		cmpw	r3,r27
 		stw	r3,libwarp_CachedTask(r26)
+		stwu	r31,-4(r13)
+		stwu	r16,-4(r13)
 		beq	.NoFlushNeeded
 		
 		li	r4,0
@@ -751,9 +744,11 @@ RunPPC68K:
 		
 .JustCode:	mtlr	r17
 		stw	r2,20(r1)
+		mr	r15,r31
 		lwz	r17,0(r17)				#Force TBL
 		blrl
 		
+		lwz	r16,0(r13)
 		lwz	r17,PP_FLAGS(r16)
 		andi.	r0,r17,PPF_LINEAR
 		beq	.NotLinear2
@@ -789,8 +784,21 @@ RunPPC68K:
 		stfd	f6,PP_FREGS+5*8(r16)
 		stfd	f7,PP_FREGS+6*8(r16)
 		stfd	f8,PP_FREGS+7*8(r16)
+		
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		lwz	r30,Data_LibBase(r31)
+		lwz	r4,libwarp_MachineFlag(r30)
+		mr.	r4,r4
+		beq	.NoTrapRemove
 				
-		li	r3,PPERR_SUCCESS
+		lis	r4,TRAPNUM_INST_SEGMENT_VIOLATION
+		li	r5,0
+		li	r6,0
+		CALLOS	r31,SetTaskTrap		
+								
+.NoTrapRemove:	li	r3,PPERR_SUCCESS
 		b	.ExitRunPPC		
 		
 .NotStandard:	li	r3,PPERR_ASYNCERR
@@ -1254,8 +1262,17 @@ FreeSemaphorePPC:					#Not needed
 AddSemaphorePPC:
 		prolog
 		
-		lwz	r9,libwarp_IExec(r3)
-		CALLOS	r9,AddSemaphore
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,AddSemaphore
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
 		
 		epilog
 
@@ -1264,8 +1281,17 @@ AddSemaphorePPC:
 RemSemaphorePPC:
 		prolog
 		
-		lwz	r9,libwarp_IExec(r3)
-		CALLOS	r9,RemSemaphore
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,RemSemaphore
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
 		
 		epilog
 
@@ -1274,8 +1300,17 @@ RemSemaphorePPC:
 ObtainSemaphorePPC:
 		prolog
 		
-		lwz	r9,libwarp_IExec(r3)
-		CALLOS	r9,ObtainSemaphore
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,ObtainSemaphore
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
 		
 		epilog
 
@@ -1284,11 +1319,21 @@ ObtainSemaphorePPC:
 AttemptSemaphorePPC:
 		prolog
 		
-		lwz	r9,libwarp_IExec(r3)
-		CALLOS	r9,AttemptSemaphore
-		cntlzw	r9,r3
-		rlwinm	r9,r9,27,5,31
-		subi	r3,r9,1
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,AttemptSemaphore
+		
+		cntlzw	r31,r3
+		rlwinm	r31,r31,27,5,31
+		subi	r3,r31,1
+
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
 
 		epilog
 
@@ -1297,8 +1342,17 @@ AttemptSemaphorePPC:
 ReleaseSemaphorePPC:
 		prolog
 		
-		lwz	r9,libwarp_IExec(r3)
-		CALLOS	r9,ReleaseSemaphore
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,ReleaseSemaphore
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
 		
 		epilog
 
@@ -1306,9 +1360,18 @@ ReleaseSemaphorePPC:
 
 FindSemaphorePPC:
 		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
 
-		lwz	r9,libwarp_IExec(r3)
-		CALLOS	r9,FindSemaphore
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,FindSemaphore
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
 		
 		epilog
 
@@ -1317,8 +1380,8 @@ FindSemaphorePPC:
 InsertPPC:	
 		prolog
 		
-		lwz	r9,libwarp_IExec(r3)
-		CALLOS	r9,Insert
+		lwz	r7,libwarp_IExec(r3)
+		CALLOS	r7,Insert
 
 		epilog
 
@@ -1327,8 +1390,8 @@ InsertPPC:
 AddHeadPPC:
 		prolog
 		
-		lwz	r9,libwarp_IExec(r3)
-		CALLOS	r9,AddHead
+		lwz	r7,libwarp_IExec(r3)
+		CALLOS	r7,AddHead
 
 		epilog
 
@@ -1337,8 +1400,8 @@ AddHeadPPC:
 AddTailPPC:
 		prolog
 		
-		lwz	r9,libwarp_IExec(r3)
-		CALLOS	r9,AddTail
+		lwz	r7,libwarp_IExec(r3)
+		CALLOS	r7,AddTail
 
 		epilog
 
@@ -1347,8 +1410,8 @@ AddTailPPC:
 RemovePPC:
 		prolog
 		
-		lwz	r9,libwarp_IExec(r3)
-		CALLOS	r9,Remove
+		lwz	r7,libwarp_IExec(r3)
+		CALLOS	r7,Remove
 
 		epilog
 
@@ -1357,8 +1420,8 @@ RemovePPC:
 RemHeadPPC:
 		prolog
 		
-		lwz	r9,libwarp_IExec(r3)
-		CALLOS	r9,RemHead
+		lwz	r7,libwarp_IExec(r3)
+		CALLOS	r7,RemHead
 
 		epilog
 
@@ -1367,8 +1430,8 @@ RemHeadPPC:
 RemTailPPC:
 		prolog
 		
-		lwz	r9,libwarp_IExec(r3)
-		CALLOS	r9,RemTail
+		lwz	r7,libwarp_IExec(r3)
+		CALLOS	r7,RemTail
 
 		epilog
 
@@ -1377,8 +1440,8 @@ RemTailPPC:
 EnqueuePPC:
 		prolog
 		
-		lwz	r9,libwarp_IExec(r3)
-		CALLOS	r9,Enqueue
+		lwz	r7,libwarp_IExec(r3)
+		CALLOS	r7,Enqueue
 
 		epilog
 
@@ -1429,8 +1492,17 @@ FreeSignalPPC:
 SetSignalPPC:
 		prolog
 		
-		lwz	r9,libwarp_IExec(r3)
-		CALLOS	r9,SetSignal
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,SetSignal
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
 		
 		epilog
 
@@ -1665,9 +1737,21 @@ PutMsgPPC:
 #********************************************************************************************
 
 GetMsgPPC:
-		illegal
-		li	r3,70
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,GetMsg
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
@@ -1755,8 +1839,8 @@ PutXMsgPPC:
 		li	r0,NT_XMSGPPC
 		stb	r0,LN_TYPE(r5)
 		
-		CALLOS	r31,PutMsg
-    		
+		CALLOS	r31,PutMsg				#rewrite this function to preserve correct node type?
+		
 		lwz	r30,0(r13)
 		lwz	r31,4(r13)
 		addi	r13,r13,8
@@ -1802,10 +1886,18 @@ AddTimePPC:
 
 SubTimePPC:
 		prolog
+
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
 		
-		lwz	r9,libwarp_ITimer(r3)
+		mr	r30,r3
 		
-		CALLOS	r9,SubTime
+		lwz	r31,libwarp_ITimer(r30)		
+		CALLOS	r31,SubTime
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
 		
 		epilog
 
@@ -1971,15 +2063,27 @@ CreatePoolPPC:
 
 DeletePoolPPC:
 		prolog
-		lwz	r9,libwarp_IExec(r3)
-		CALLOS	r9,DeletePool
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,DeletePool
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
 		epilog
 
 #********************************************************************************************
 
 AllocPooledPPC:
 		prolog
-
+		
+		stwu	r31,-4(r13)
 		stwu	r30,-4(r13)
 		stwu	r27,-4(r13)
 
@@ -1987,14 +2091,15 @@ AllocPooledPPC:
 		ldaddr	r27,FRun68K	
 		bl	.DebugStartOutPut
 		
-		lwz	r9,libwarp_IExec(r30)
-		CALLOS	r9,AllocPooled
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,AllocPooled
 		
 		bl	.DebugEndOutPut
 		
 		lwz	r27,0(r13)
 		lwz	r30,4(r13)
-		addi	r13,r13,8
+		lwz	r31,8(r13)
+		addi	r13,r13,12
 		
 		epilog
 
@@ -2002,8 +2107,19 @@ AllocPooledPPC:
 
 FreePooledPPC:
 		prolog
-		lwz	r9,libwarp_IExec(r3)
-		CALLOS	r9,FreePooled
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,FreePooled
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
 		epilog
 
 #********************************************************************************************
