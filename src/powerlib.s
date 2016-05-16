@@ -953,29 +953,85 @@ SPrintF68K68K:
 #********************************************************************************************
 
 AllocXMsg68K:
-		illegal
-		li	r3,6
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		stwu	r29,-4(r13)
+		stwu	r28,-4(r13)
+		stwu	r26,-4(r13)
+		stwu	r25,-4(r13)
+		
+		lwz	r30,REG68K_A6(r3)
+		lwz	r29,REG68K_D0(r3)
+		lwz	r31,libwarp_IExec(r30)
+		addi	r28,r29,MN_SIZE
+		lwz	r25,REG68K_A0(r3)				
+		CALLOS	r31,AllocVec
+		mr.	r26,r3		
+		beq	.NoXMem
+		
+		sth	r28,MN_LENGTH(r26)
+		stw	r25,MN_REPLYPORT(r26)
+
+.NoXMem:	lwz	r25,0(r13)
+		lwz	r26,4(r13)
+		lwz	r28,8(r13)
+		lwz	r29,12(r13)
+		lwz	r30,16(r13)
+		lwz	r31,20(r13)
+		addi	r13,r13,24
+		
+		epilog
+
 
 #********************************************************************************************
 
 FreeXMsg68K:
-		illegal
-		li	r3,7
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		lwz	r30,REG68K_A6(r3)
+		lwz	r4,REG68K_A0(r3)
+		lwz	r31,libwarp_IExec(r30)
+		
+		CALLOS	r31,FreeVec
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 PutXMsg68K:
-		illegal
-		li	r3,8
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		li	r0,NT_XMSG68K
+		lwz	r30,REG68K_A6(r3)
+		lwz	r5,REG68K_A1(r3)
+		lwz	r31,libwarp_IExec(r30)
+		lwz	r4,REG68K_A0(r3)
+		stb	r0,LN_TYPE(r5)
+		
+		CALLOS	r31,PutMsg
+
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 GetPPCState68K:
-		illegal
-		li	r3,9
+		li	r3,PPCSTATEF_APPRUNNING|PPCSTATEF_APPACTIVE
 		blr
 
 #********************************************************************************************
