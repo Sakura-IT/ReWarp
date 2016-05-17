@@ -25,11 +25,18 @@
 .set Disable,			248
 .set Enable,			252
 .set FindTask,			260
+.set SetTaskPri,		268
 .set AllocSignal,		276
 .set FreeSignal,		280
 .set SetSignal,			288
+.set Signal,			292
+.set Wait,			296
+.set AddPort,			300
+.set FindPort,			320
 .set GetMsg,			324
 .set PutMsg,			328
+.set RemPort,			332
+.set ReplyMsg,			336
 .set WaitPort,			340
 .set AddSemaphore,		348
 .set AttemptSemaphore,		352
@@ -68,6 +75,7 @@
 .set FindTagItem,		96
 .set GetTagData,		104
 .set NextTagItem,		112
+.set MoveMem,			312
 
 # Dos
 .set FPutC,			292

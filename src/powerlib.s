@@ -1748,20 +1748,57 @@ SetSignalPPC:
 #********************************************************************************************
 
 SignalPPC:
-		illegal
-		li	r3,44
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,Signal
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 WaitPPC:
-		illegal
-		li	r3,45
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,Wait
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 SetTaskPriPPC:
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		extsb	r5,r5
+		mr	r30,r3
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,SetTaskPri
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 		illegal
 		li	r3,46
 		blr
@@ -1769,15 +1806,24 @@ SetTaskPriPPC:
 #********************************************************************************************
 
 Signal68K:
-		illegal
-		li	r3,47
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,Signal
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
-SetCache:
-		illegal
-		li	r3,48
+SetCache:					#Not implemented
 		blr
 
 #********************************************************************************************
@@ -1940,23 +1986,56 @@ DeleteMsgPortPPC:
 #********************************************************************************************
 
 AddPortPPC:
-		illegal
-		li	r3,65
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,AddPort
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 RemPortPPC:
-		illegal
-		li	r3,66
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,RemPort
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 FindPortPPC:
-		illegal
-		li	r3,67
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,FindPort
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
@@ -1984,9 +2063,20 @@ WaitPortPPC:
 #********************************************************************************************
 
 PutMsgPPC:
-		illegal
-		li	r3,69
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,PutMsg
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
@@ -2014,9 +2104,20 @@ GetMsgPPC:
 #********************************************************************************************
 
 ReplyMsgPPC:
-		illegal
-		li	r3,71
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,ReplyMsg
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
@@ -2027,9 +2128,20 @@ FreeAllMem:					#NEEDS IMPLEMENTATION
 #********************************************************************************************
 
 CopyMemPPC:
-		illegal
-		li	r3,73
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		lwz	r31,libwarp_IUtility(r30)
+		CALLOS	r31,MoveMem
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
@@ -2188,6 +2300,20 @@ SubTimePPC:
 #********************************************************************************************
 
 CmpTimePPC:
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		lwz	r31,libwarp_ITimer(r30)
+		CALLOS	r31,CmpTime
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 		illegal
 		li	r3,80
 		blr
@@ -2195,8 +2321,8 @@ CmpTimePPC:
 #********************************************************************************************
 
 SetReplyPortPPC:
-		illegal
-		li	r3,81
+		lwz	r3,MN_REPLYPORT(r4)
+		stw	r5,MN_REPLYPORT(r4)
 		blr
 
 #********************************************************************************************
@@ -2237,8 +2363,7 @@ FindTaskByID:
 #********************************************************************************************
 
 SetNiceValue:
-		illegal
-		li	r3,87
+		li	r3,0
 		blr
 
 #********************************************************************************************
