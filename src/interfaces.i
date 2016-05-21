@@ -79,3 +79,5 @@
 
 # Dos
 .set FPutC,			292
+.set CreateNewProcTags,		432
+.set GetEntryData,		788

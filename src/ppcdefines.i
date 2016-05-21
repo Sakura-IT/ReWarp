@@ -420,6 +420,14 @@
 .set TASKATTR_ATOMIC,		0x80100014
 .set TASKATTR_NOTIFYMSG,	0x80100015
 
+.set NP_ENTRY,			0x800003eb
+.set NP_NAME,			0x800003f4
+.set NP_STACKSIZE,		0x800003f3
+.set NP_PRIORITY,		0x800003f5
+.set NP_USERDATA,		0x80000402
+.set NP_CHILD,			0x80000403
+.set NP_ENTRYDATA,		0x80000409
+
 # Bit defines for the L2CR register
 .set L2CR_L2E,			0x80000000 		# bit 0 - enable
 .set L2CR_L2PE,			0x40000000 		# bit 1 - data parity
@@ -651,6 +659,7 @@
 .set TAG_DONE,0
 .set MEMERR_SUCCESS,0
 .set FALSE,0
+.set TRUE,1
 
 .set RTF_AUTOINIT,0x80
 .set RTF_NATIVE,0x20

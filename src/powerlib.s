@@ -686,13 +686,14 @@ RunPPC68K:
 		stwu	r31,-4(r13)
 		
 		lwz	r16,REG68K_A0(r3)
+		lwz	r3,REG68K_A6(r3)
+	
+.SNewProc:	lwz	r31,libwarp_IExec(r3)
+		mr	r26,r3
+		
 		lwz	r17,PP_FLAGS(r16)
 		andi.	r0,r17,PPF_ASYNC|PPF_THROW
 		bne	.NotStandard
-	
-		lwz	r3,REG68K_A6(r3)
-		lwz	r31,libwarp_IExec(r3)
-		mr	r26,r3
 		
 		lwz	r4,libwarp_MachineFlag(r26)
 		mr.	r4,r4
@@ -1268,23 +1269,40 @@ FreeVecPPC:						#NEEDS MEMLIST
 #********************************************************************************************
 
 CreateTaskPPC:
+
 		prolog
+
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		stwu	r29,-4(r13)
+		stwu	r28,-4(r13)
+		stwu	r27,-4(r13)
+		stwu	r26,-4(r13)
+		stwu	r25,-4(r13)
+		stwu	r24,-4(r13)
+		stwu	r23,-4(r13)
+		stwu	r22,-4(r13)
+		stwu	r21,-4(r13)
+		stwu	r20,-4(r13)
+		stwu	r19,-4(r13)
+		stwu	r18,-4(r13)
+		stwu	r17,-4(r13)
+		stwu	r16,-4(r13)
 
 		stw	r4,200(r1)
 		addi	r28,r1,200
 		
-		li	r21,0
-		li	r22,0
-		li	r23,0
-		li	r24,0
-		li	r25,0
+		lis	r16,1
+		li	r21,0				#name
+		li	r22,0				#pri_flag
+		li	r23,0				#default pri
+		li	r24,0				#code
+		li	r25,0				#inherit_flag
 
 		mr	r30,r3
 		lwz	r31,libwarp_IExec(r30)
 		lwz	r29,libwarp_IUtility(r30)
-		
-		li	r4,0
-		CALLOS	r31,FindTask
+		addi	r27,r1,100
 		
 		ldaddr	r19,JumpTable
 		
@@ -1295,7 +1313,7 @@ CreateTaskPPC:
 		
 		lwz	r20,0(r26)
 		subis	r0,r20,TASKATTR_CODE@h
-		cmplwi	r0,18
+		cmplwi	r0,21
 		bgt	.DoNextTag
 		
 		rlwinm	r0,r0,2,0,29			#jumptable
@@ -1303,40 +1321,211 @@ CreateTaskPPC:
 		mtctr	r18
 		bctr
 		
-		lwz	r25,4(r26)
-		cmpwi	r25,0
-		beq	.DoNextTag
+.NoMoreTags:	mr.	r24,r24
+		bne	.GotCode
 		
-.NoMoreTags:	cmpw	r24,0
-		bne	.notyetimplemented
+.ErrorCreate:	li	r3,0
+		b	.ExitCreate		
 		
-		li	r3,0		
+.CorrectCreate:	nop
+				
+.ExitCreate:	lwz	r16,0(r13)
+		lwz	r17,4(r13)
+		lwz	r18,8(r13)
+		lwz	r19,12(r13)
+		lwz	r20,16(r13)
+		lwz	r21,20(r13)
+		lwz	r22,24(r13)
+		lwz	r23,28(r13)
+		lwz	r24,32(r13)
+		lwz	r25,36(r13)
+		lwz	r26,40(r13)
+		lwz	r27,44(r13)
+		lwz	r28,48(r13)
+		lwz	r29,52(r13)
+		lwz	r30,56(r13)
+		lwz	r31,60(r13)
+		addi	r13,r13,64
 		
 		epilog
-.notyetimplemented:
-tag0:		
-tag1:
-tag2:
-tag3:
-tag4:
-tag5:
-tag6:
-tag7:
-tag8:
-tag9:
-tag10:
-tag11:
-tag12:
-tag13:
-tag14:
-tag15:
-tag16:
-tag17:
-tag18:
-		illegal
+
+#******************************************************	
+	
+.GotCode:	mr.	r21,r21				#NAME
+		beq	.ErrorCreate
+		
+		lhz	r29,lib_OpenCnt(r30)
+		addi	r29,r29,1
+		sth	r29,lib_OpenCnt(r30)
+
+		li	r4,256		
+		loadreg	r5,MEMF_SHARED|MEMF_CLEAR	
+		CALLOS	r31,AllocVec
+		
+		stw	r24,PP_CODE(r3)
+		li	r0,PPF_LINEAR
+		stw	r0,PP_FLAGS(r3)
+		mfctr	r12
+		li	r9,8
+		mtctr	r9
+		la	r10,PP_REGS-4(r3)
+		mr	r11,r27
+		
+.CpRegs:	lwzu	r0,4(r11)
+		stwu	r0,4(r10)
+		bdnz	.CpRegs
+		
+		mtctr	r12
+		lwz	r0,0(r27)
+		stw	r0,PP_REGS+12*4(r3)
+				
+		loadreg	r6,NP_ENTRY
+		loadreg	r7,NP_NAME
+		loadreg	r8,NP_STACKSIZE
+		loadreg	r9,NP_PRIORITY
+		loadreg	r10,NP_ENTRYDATA
+		loadreg	r11,NP_CHILD
+		ldaddr	r12,NewProc
+		
+		stw	r6,8(r1)
+		stw	r7,16(r1)
+		stw	r8,24(r1)
+		stw	r9,32(r1)
+		li	r6,TRUE
+		stw	r10,40(r1)
+		stw	r11,48(r1)
+		stw	r6,52(r1)
+		li	r0,TAG_DONE
+		stw	r12,12(r1)
+		stw	r21,20(r1)
+		stw	r16,28(r1)
+		stw	r23,36(r1)
+		stw	r3,44(r1)
+		stw	r0,56(r1)
+				
+		lwz	r20,libwarp_IDOS(r30)
+		CALLOS	r20,CreateNewProcTags
+		
+		li	r4,0
+#		CALLOS	r31,FindTask			#insert wipeout patch
+		
+		b	.CorrectCreate	
+		
+#******************************************************
+
+NewProc:	prolog
+
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		stwu	r29,-4(r13)
+		stwu	r28,-4(r13)
+		
+		lis	r30,WarpLibBase@ha
+		lwz	r30,WarpLibBase@l(r30)		
+		lwz	r31,libwarp_IExec(r30)
+		
+		lwz	r29,libwarp_IDOS(r30)
+		CALLOS	r29,GetEntryData
+		mr	r28,r3
+		
+		bl	.StartProc
+				
+		mr	r4,r28
+		CALLOS	r31,FreeVec
+		
+		lwz	r28,0(r13)
+		lwz	r29,4(r13)
+		lwz	r30,8(r13)
+		lwz	r31,12(r13)
+		addi	r13,r13,16
+		
+		epilog
+		
+#******************************************************
+		
+.StartProc:	prolog
+		
+		stwu	r2,-4(r13)
+		stwu	r16,-4(r13)
+		stwu	r17,-4(r13)
+		stwu	r11,-4(r13)
+		stwu	r12,-4(r13)
+		stwu	r14,-4(r13)
+		stwu	r15,-4(r13)
+		stwu	r18,-4(r13)
+		stwu	r19,-4(r13)
+		stwu	r20,-4(r13)
+		stwu	r21,-4(r13)
+		stwu	r22,-4(r13)
+		stwu	r23,-4(r13)
+		stwu	r24,-4(r13)
+		stwu	r25,-4(r13)
+		stwu	r26,-4(r13)
+		stwu	r27,-4(r13)
+		stwu	r28,-4(r13)
+		stwu	r29,-4(r13)
+		stwu	r30,-4(r13)
+		stwu	r31,-4(r13)
+			
+		mr	r16,r3
+		mr	r3,r30			
+					
+		b	.SNewProc	
+	
+#******************************************************
+
+.tagCODE:	lwz	r24,4(r26)
+		b	.DoNextTag
+		
+.tagNAME:	lwz	r21,4(r26)
+		b	.DoNextTag
+		
+.tagPRI:	mr.	r22,r22
+		bne	.DoNextTag
+		lwz	r23,4(r26)
+		b	.DoNextTag
+		
+.tagSTACKSIZE:	lwz	r16,4(r26)
+		lis	r0,1
+		cmplw	r16,r0
+		ble	.DoNextTag
+		addi	r0,r16,15
+		rlwinm	r16,r16,0,0,27
+		b	.DoNextTag
+		
+.tagREGR2:	mr.	r25,r25
+		bne	.DoNextTag
+		lwz	r0,4(r26)
+		stw	r0,0(r27)
+		b	.DoNextTag
+		
+.tagREG:	subis	r0,r20,TASKATTR_CODE@h
+		subi	r0,r0,TASKATTR_R2@l
+		rlwinm	r9,r0,2,0,29
+		lwz	r0,4(r26)
+		stwx	r0,r27,r9	
 		b	.DoNextTag
 
-
+.tagINHERITR2:	lwz	r25,4(r26)
+		stw	r25,0(r27)
+		b	.DoNextTag
+			
+.tagNICE:	lwz	r0,4(r26)
+		cmpwi	r0,0
+		ble	.DoNextTag
+		subi	r23,r23,1
+		b	.DoNextTag
+		
+.tagMOTHERPRI:	lwz	r0,4(r26)
+		li	r22,0
+		cmpwi	r0,0
+		beq	.DoNextTag
+		mr	r4,r22
+		CALLOS	r31,FindTask
+		lwz	r22,4(r26)
+		lbz	r0,LN_PRI(r3)
+		extsb	r23,r0
+		b	.DoNextTag
 
 #********************************************************************************************
 
@@ -2704,8 +2893,10 @@ FDeallocatePPC:			.byte	"DeallocatePPC",0
 #********************************************************************************************
 
 JumpTable:
-.long	tag0,tag1,tag2,tag3,tag4,tag5,tag6,tag7,tag8,tag9
-.long	tag10,tag11,tag12,tag13,tag14,tag15,tag16,tag17,tag18
+.long	.tagCODE,.DoNextTag,.tagNAME,.tagPRI,.tagSTACKSIZE
+.long	.tagREGR2,.tagREG,.tagREG,.tagREG,.tagREG,.tagREG,.tagREG,.tagREG,.tagREG
+.long	.DoNextTag,.tagMOTHERPRI,.DoNextTag,.DoNextTag,.tagNICE,.tagINHERITR2,.DoNextTag
+.long	.DoNextTag
 
 #********************************************************************************************
 
