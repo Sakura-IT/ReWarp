@@ -590,6 +590,8 @@
 .set MP_PPC_SEM,48
 
 .set pr_MsgPort,92
+.set pr_CLI,172
+.set cli_CommandName,16
 
 .set MN_REPLYPORT,14
 .set MN_LENGTH,18

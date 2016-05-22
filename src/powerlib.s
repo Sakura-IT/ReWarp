@@ -451,8 +451,19 @@ ExceptionHandler:
 		CALLOS	r31,FindTask
 		
 		lwz	r23,LN_NAME(r3)	
+		lwz	r29,pr_CLI(r3)
+		mr.	r29,r29
+		beq	.NoCLI
 		
-		stw	r27,12(r1)
+		rlwinm	r29,r29,2,0,31
+		lwz	r29,cli_CommandName(r29)
+		mr.	r29,r29
+		beq	.NoCLI
+		
+		rlwinm	r23,r29,2,0,31
+		addi	r23,r23,1
+				
+.NoCLI:		stw	r27,12(r1)
 		stw	r28,16(r1)
 		stw	r26,20(r1)
 		stw	r23,8(r1)
@@ -489,6 +500,7 @@ ExceptionHandler:
 		stwu	r29,-4(r13)
 		stwu	r28,-4(r13)
 		stwu	r26,-4(r13)
+		stwu	r25,-4(r13)
 		
 		lbz	r31,libwarp_DebugFlag(r30)
 		mr.	r31,r31
@@ -504,7 +516,19 @@ ExceptionHandler:
 		
 		lwz	r26,LN_NAME(r3)
 		
-		stw	r27,12(r1)
+		lwz	r25,pr_CLI(r3)
+		mr.	r25,r25
+		beq	.NoCLI2
+		
+		rlwinm	r25,r25,2,0,31
+		lwz	r25,cli_CommandName(r25)
+		mr.	r25,r25
+		beq	.NoCLI2
+		
+		rlwinm	r26,r25,2,0,31
+		addi	r26,r26,1
+		
+.NoCLI2:	stw	r27,12(r1)
 		stw	r29,16(r1)
 		stw	r26,8(r1)
 		mr	r4,r30
@@ -513,12 +537,13 @@ ExceptionHandler:
 		mr	r3,r29
 		mr	r4,r28
 		
-.NoDebugEnd:	lwz	r26,0(r13)
-		lwz	r28,4(r13)
-		lwz	r29,8(r13)
-		lwz	r30,12(r13)
-		lwz	r31,16(r13)
-		addi	r13,r13,20
+.NoDebugEnd:	lwz	r25,0(r13)
+		lwz	r26,4(r13)
+		lwz	r28,8(r13)
+		lwz	r29,12(r13)
+		lwz	r30,16(r13)
+		lwz	r31,20(r13)
+		addi	r13,r13,24
 		
 		epilog	
 		
