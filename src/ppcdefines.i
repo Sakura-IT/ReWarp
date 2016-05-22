@@ -20,20 +20,22 @@
 .set libwarp_IUtility,52
 .set libwarp_CachedTask,56
 .set libwarp_MachineFlag,60
-.set libwarp_StartTimeVal,64
-.set libwarp_sr0,72
-.set libwarp_sr1,76
-.set libwarp_sr2,80
-.set libwarp_sr3,84
-.set libwarp_sr4,88
-.set libwarp_sr5,92
-.set libwarp_sr6,96
-.set libwarp_sr7,100
-.set libwarp_DebugFlag,104
-.set libwarp_CacheFlag,105
-.set libwarp_pad2,106
-.set libwarp_pad3,107
-.set libwarp_PosSize,108
+.set libwarp_Private1,64
+.set libwarp_Private2,68
+.set libwarp_StartTimeVal,72
+.set libwarp_sr0,80
+.set libwarp_sr1,84
+.set libwarp_sr2,88
+.set libwarp_sr3,92
+.set libwarp_sr4,96
+.set libwarp_sr5,100
+.set libwarp_sr6,104
+.set libwarp_sr7,108
+.set libwarp_DebugFlag,112
+.set libwarp_CacheFlag,113
+.set libwarp_pad2,114
+.set libwarp_pad3,115
+.set libwarp_PosSize,116
 
 .set EXCDATA_TYPE,8				#Always NT_INTERRUPT
 .set EXCDATA_PRI,9				#This
@@ -710,4 +712,10 @@
 .set MAS1_VALID,			0x80000000
 
 .set io_Device,			20
+.set io_Command,		28
+.set io_Actual,			32
+.set io_Length,			36
+
+.set TR_ADDREQUEST,		9
+.set UNIT_MICROHZ,		0
 

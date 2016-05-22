@@ -100,7 +100,7 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 		beq	.ErrorExp
 		
 		ldaddr	r4,TimerDev
-		li	r5,0
+		li	r5,UNIT_MICROHZ
 		mr	r6,r25
 		li	r7,0
 		CALLOS	r29,OpenDevice
@@ -1405,10 +1405,21 @@ CreateTaskPPC:
 				
 		lwz	r20,libwarp_IDOS(r30)
 		CALLOS	r20,CreateNewProcTags
-		
+
+		ldaddr	r9,WipeOut
+		mr	r11,r21
+.NextChar:	lbz	r10,0(r11)
+		addi	r11,11,1
+		lbz	r0,0(r9)
+		addi	r9,r9,1
+		cmpw	r10,r0
+		bne	.CorrectCreate
+		cmpwi	r10,0
+		bne	.NextChar		
+				
 		li	r4,0
-#		CALLOS	r31,FindTask			#insert wipeout patch
-		
+		CALLOS	r31,FindTask			#wipeout patch
+				
 		b	.CorrectCreate	
 		
 #******************************************************
@@ -1555,6 +1566,7 @@ DeleteTaskPPC:
 FindTaskPPC:
 		prolog
 		
+		stwu	r31,-4(r13)
 		stwu	r30,-4(r13)
 		stwu	r27,-4(r13)
 		
@@ -1562,14 +1574,15 @@ FindTaskPPC:
 		ldaddr	r27,FFindTaskPPC	
 		bl	.DebugStartOutPut
 		
-		lwz	r9,libwarp_IExec(r30)
-		CALLOS	r9,FindTask
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,FindTask
 		
 		bl	.DebugEndOutPut
 		
 		lwz	r27,0(r13)
 		lwz	r30,4(r13)
-		addi	r13,r13,8
+		lwz	r31,8(r13)
+		addi	r13,r13,12
 		
 		epilog
 
@@ -1578,6 +1591,7 @@ FindTaskPPC:
 InitSemaphorePPC:
 		prolog
 		
+		stwu	r31,-4(r13)
 		stwu	r30,-4(r13)
 		stwu	r27,-4(r13)
 		
@@ -1585,8 +1599,8 @@ InitSemaphorePPC:
 		ldaddr	r27,FInitSemaphorePPC
 		bl	.DebugStartOutPut
 		
-		lwz	r9,libwarp_IExec(r30)
-		CALLOS	r9,InitSemaphore
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,InitSemaphore
 		
 		li	r3,SSPPC_SUCCESS
 		
@@ -1594,7 +1608,8 @@ InitSemaphorePPC:
 		
 		lwz	r27,0(r13)
 		lwz	r30,4(r13)
-		addi	r13,r13,8
+		lwz	r31,8(r13)
+		addi	r13,r13,12
 		
 		epilog
 
@@ -1988,9 +2003,6 @@ SetTaskPriPPC:
 		addi	r13,r13,8
 		
 		epilog
-		illegal
-		li	r3,46
-		blr
 
 #********************************************************************************************
 
@@ -2060,10 +2072,126 @@ ModifyFPExc:
 #********************************************************************************************
 
 WaitTime:
-		illegal
-		li	r3,55
-		blr
+		mr.	r5,r5
+		beq	WaitPPC
+		
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		stwu	r29,-4(r13)
+		stwu	r28,-4(r13)
+		stwu	r27,-4(r13)
+		stwu	r26,-4(r13)
+		stwu	r25,-4(r13)
+		stwu	r24,-4(r13)
+		stwu	r23,-4(r13)
+		stwu	r22,-4(r13)
+		
+		mr	r23,r5
+		mr	r24,r4
+		mr	r28,r3
+		li	r26,TAG_DONE		
+		lwz	r31,libwarp_IExec(r28)
+		
+		li	r4,ASOT_PORT
+		stw	r26,8(r1)
+		CALLOS	r31,AllocSysObjectTags
 
+		mr.	r27,r3
+		beq	.CrashError
+		
+		li	r4,ASOT_IOREQUEST
+		stw	r26,24(r1)
+		loadreg	r5,ASOIOR_ReplyPort
+		stw	r5,8(r1)
+		stw	r27,12(r1)
+		loadreg	r5,ASOIOR_Size
+		stw	r5,16(r1)
+		li	r5,40
+		stw	r5,20(r1)
+		CALLOS	r31,AllocSysObjectTags
+		
+		mr.	r30,r3
+		beq	.CrashError
+		
+		ldaddr	r4,TimerDev
+		li	r5,UNIT_MICROHZ
+		mr	r6,r30
+		li	r7,0
+		CALLOS	r31,OpenDevice		
+		
+		mr.	r3,r3
+		bne	.CrashError
+		
+		li	r0,TR_ADDREQUEST			
+		lbz	r25,MP_SIGBIT(r27)
+		sth	r0,io_Command(r30)
+		li	r29,1
+		slw	r29,r29,r25
+		stw	r26,io_Actual+TV_SECS(r30)
+		or	r29,r29,r24
+		stw	r23,io_Actual+TV_MICRO(r30)
+		
+		mr	r4,r30
+		
+		CALLOS	r31,SendIO
+		
+		mr	r4,r29
+		
+		CALLOS	r31,Wait
+		
+		mr	r22,r3
+		mr	r4,r30
+		
+		CALLOS	r31,CheckIO
+		
+		mr.	r3,r3
+		bne	.TimesUp
+		
+		mr	r4,r30
+		
+		CALLOS	r31,AbortIO
+		
+.TimesUp:	mr	r4,r30
+		
+		CALLOS	r31,WaitIO
+		
+		mr	r4,r30
+
+		CALLOS	r31,CloseDevice	
+	
+		li	r4,ASOT_IOREQUEST
+		mr	r5,r30
+		
+		CALLOS	r31,FreeSysObject
+
+		li	r4,ASOT_PORT
+		mr	r5,r27
+
+		CALLOS	r31,FreeSysObject
+
+		li      r0,-2
+		rotlw   r0,r0,r25
+		and     r3,r22,r0
+
+		lwz	r22,0(r13)
+		lwz	r23,4(r13)
+		lwz	r24,8(r13)
+		lwz	r25,12(r13)
+		lwz	r26,16(r13)
+		lwz	r27,20(r13)
+		lwz	r28,24(r13)
+		lwz	r29,28(r13)
+		lwz	r30,32(r13)
+		lwz	r31,36(r13)
+		addi	r13,r13,40
+
+		epilog	
+
+.CrashError:	illegal
+		b	.CrashError
+		
 #********************************************************************************************
 
 ChangeStack:					#Not Needed
@@ -2256,14 +2384,19 @@ PutMsgPPC:
 		
 		stwu	r31,-4(r13)
 		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
 		
 		mr	r30,r3
+		ldaddr	r27,FPutMsgPPC
+		bl	.DebugStartOutPut
+		
 		lwz	r31,libwarp_IExec(r30)
 		CALLOS	r31,PutMsg
 		
-		lwz	r30,0(r13)
-		lwz	r31,4(r13)
-		addi	r13,r13,8
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		lwz	r31,8(r13)
+		addi	r13,r13,12
 		
 		epilog
 
@@ -2503,9 +2636,6 @@ CmpTimePPC:
 		addi	r13,r13,8
 		
 		epilog
-		illegal
-		li	r3,80
-		blr
 
 #********************************************************************************************
 
@@ -2544,9 +2674,8 @@ SetScheduling:
 
 #********************************************************************************************
 
-FindTaskByID:
-		illegal
-		li	r3,86
+FindTaskByID:					#Unsupported
+		li	r3,0
 		blr
 
 #********************************************************************************************
@@ -2784,6 +2913,8 @@ UtilLib:
 .byte	"utility.library",0
 MainName:
 .byte	"main",0
+WipeOut:
+.byte	"wo2097_mixer",0
 
 IDString:	
 .byte	"$VER: powerpc.library 18.0 (01-Jun-16)",0

@@ -53,6 +53,11 @@
 .set CacheClearE,		492
 .set CacheClearU,		496
 .set OpenDevice,		504
+.set CloseDevice,		508
+.set AbortIO,			520
+.set CheckIO,			524
+.set SendIO,			532
+.set WaitIO,			540
 .set SuperState,		576
 .set UserState,			580
 .set SetTaskTrap,		588
