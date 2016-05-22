@@ -34,7 +34,8 @@
 		mflr	r0
 		stwu	r0,-4(r13)
 		mfcr	r0
-		stw	r0,-4(r13)
+		stwu	r0,-4(r13)
+		stwu	r2,-4(r13)
 .endm
 
 .macro	epilog
@@ -43,6 +44,7 @@
 		mtlr    r0
 		lwz     r0,-12(r13)
 		mtcr    r0
+		lwz	r2,-16(r13)
 		lwz	r13,-4(r13)
 		lwz	r1,0(r1)
 		blr

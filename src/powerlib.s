@@ -1415,7 +1415,7 @@ CreateTaskPPC:
 		cmpw	r10,r0
 		bne	.CorrectCreate
 		cmpwi	r10,0
-		bne	.NextChar		
+		bne	.NextChar				
 				
 		li	r4,0
 		CALLOS	r31,FindTask			#wipeout patch
@@ -1518,7 +1518,9 @@ NewProc:	prolog
 		b	.DoNextTag
 
 .tagINHERITR2:	lwz	r25,4(r26)
-		stw	r25,0(r27)
+		mr.	r25,r25
+		beq	.DoNextTag
+		stw	r2,0(r27)
 		b	.DoNextTag
 			
 .tagNICE:	lwz	r0,4(r26)
