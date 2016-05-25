@@ -492,7 +492,6 @@ ExceptionHandler:
 #********************************************************************************************		
 
 .DebugEndOutPut:
-
 		prolog					#Function(r27), result(r3)
 		
 		stwu	r31,-4(r13)
@@ -545,8 +544,50 @@ ExceptionHandler:
 		lwz	r31,20(r13)
 		addi	r13,r13,24
 		
+
 		epilog	
+#********************************************************************************************		
+
+.UnSupported:						#Function(r27)
+		prolog
 		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		stwu	r29,-4(r13)
+		stwu	r28,-4(r13)
+		
+		lwz	r31,libwarp_IExec(r30)		
+		ldaddr	r30,UnSupportedString
+		
+		li	r4,0
+		CALLOS	r31,FindTask
+		
+		lwz	r28,LN_NAME(r3)	
+		lwz	r29,pr_CLI(r3)
+		mr.	r29,r29
+		beq	.NoCLI3
+		
+		rlwinm	r29,r29,2,0,31
+		lwz	r29,cli_CommandName(r29)
+		mr.	r29,r29
+		beq	.NoCLI3
+		
+		rlwinm	r28,r29,2,0,31
+		addi	r28,r28,1
+				
+.NoCLI3:	stw	r27,12(r1)
+		stw	r28,8(r1)
+		mr	r4,r30
+		CALLOS	r31,DebugPrintF
+		
+		lwz	r28,0(r13)
+		lwz	r29,4(r13)
+		lwz	r30,8(r13)
+		lwz	r31,12(r13)
+		addi	r13,r13,16
+		
+		epilog
+				
 #********************************************************************************************
 
 IObtain:
@@ -1063,8 +1104,6 @@ GetPPCState68K:
 #********************************************************************************************
 
 SetCache68K68K:
-		illegal
-		li	r3,10
 		blr
 
 #********************************************************************************************
@@ -1077,9 +1116,21 @@ CreatePPCTask68K:
 #********************************************************************************************
 
 CausePPCInterrupt68K:
-		illegal
-		li	r3,12
-		blr
+		prolog
+		
+		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
+		
+		mr	r30,r3
+		ldaddr	r27,FCausePPCInterrupt
+		bl	.UnSupported		
+		li	r3,0
+		
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 #********************************************************************************************
@@ -1233,9 +1284,21 @@ SPrintF:
 #********************************************************************************************
 
 Run68KLowLevel:
-		illegal
-		li	r3,16
-		blr
+		prolog
+		
+		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
+		
+		mr	r30,r3
+		ldaddr	r27,FRun68KLowLevel
+		bl	.UnSupported		
+		li	r3,3
+		
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
@@ -2057,44 +2120,116 @@ SetCache:					#Not implemented
 #********************************************************************************************
 
 SetExcHandler:
-		illegal
-		li	r3,49
-		blr
+		prolog
+		
+		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
+		
+		mr	r30,r3
+		ldaddr	r27,FSetExcHandler
+		bl	.UnSupported		
+		li	r3,0
+		
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 RemExcHandler:
-		illegal
-		li	r3,50
-		blr
+		prolog
+		
+		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
+		
+		mr	r30,r3
+		ldaddr	r27,FRemExcHandler
+		bl	.UnSupported		
+		li	r3,0
+		
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 Super:
-		illegal
-		li	r3,51
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,SuperState
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 User:
-		illegal
-		li	r3,52
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,UserState
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 SetHardware:
-		illegal
-		li	r3,53
-		blr
+		prolog
+		
+		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
+		
+		mr	r30,r3
+		ldaddr	r27,FSetHardware
+		bl	.UnSupported		
+		li	r3,0
+		
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 ModifyFPExc:
-		illegal
-		li	r3,54
-		blr
+		prolog
+		
+		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
+		
+		mr	r30,r3
+		ldaddr	r27,FModifyFPExc
+		bl	.UnSupported		
+		li	r3,0
+		
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
@@ -2221,43 +2356,103 @@ WaitTime:
 		
 #********************************************************************************************
 
-ChangeStack:					#Not Needed
+ChangeStack:					#ToBeImplemented!
 		blr
 
 #********************************************************************************************
 
 LockTaskList:
-		illegal
-		li	r3,57
-		blr
+		prolog
+		
+		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
+		
+		mr	r30,r3
+		ldaddr	r27,FLockTaskList
+		bl	.UnSupported		
+		li	r3,0
+		
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 UnLockTaskList:
-		illegal
-		li	r3,58
-		blr
+		prolog
+		
+		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
+		
+		mr	r30,r3
+		ldaddr	r27,FUnLockTaskList
+		bl	.UnSupported		
+		li	r3,0
+		
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 SetExcMMU:
-		illegal
-		li	r3,59
-		blr
+		prolog
+		
+		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
+		
+		mr	r30,r3
+		ldaddr	r27,FSetExcMMU
+		bl	.UnSupported		
+		li	r3,0
+		
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 ClearExcMMU:
-		illegal
-		li	r3,60
-		blr
+		prolog
+		
+		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
+		
+		mr	r30,r3
+		ldaddr	r27,FClearExcMMU
+		bl	.UnSupported		
+		li	r3,0
+		
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 ChangeMMU:
-		illegal
-		li	r3,61
-		blr
+		prolog
+		
+		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
+		
+		mr	r30,r3
+		ldaddr	r27,FChangeMMU
+		bl	.UnSupported		
+		li	r3,0
+		
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
@@ -2674,20 +2869,44 @@ SetReplyPortPPC:
 #********************************************************************************************
 
 SnoopTask:
-		illegal
-		li	r3,82
-		blr
+		prolog
+		
+		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
+		
+		mr	r30,r3
+		ldaddr	r27,FSnoopTask
+		bl	.UnSupported		
+		li	r3,0
+		
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 EndSnoopTask:
-		illegal
-		li	r3,83
-		blr
+		prolog
+		
+		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
+		
+		mr	r30,r3
+		ldaddr	r27,FEndSnoopTask
+		bl	.UnSupported		
+		li	r3,0
+		
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
-GetHALInfo:
+GetHALInfo:						#needs implementation!
 		illegal
 		li	r3,84
 		blr
@@ -2695,15 +2914,40 @@ GetHALInfo:
 #********************************************************************************************
 
 SetScheduling:
-		illegal
-		li	r3,85
-		blr
+		prolog
+		
+		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
+		
+		mr	r30,r3
+		ldaddr	r27,FSetScheduling
+		bl	.UnSupported		
+		li	r3,0
+		
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
-FindTaskByID:					#Unsupported
+FindTaskByID:
+		prolog
+		
+		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
+		
+		mr	r30,r3
+		ldaddr	r27,FFindTaskByID
+		bl	.UnSupported		
 		li	r3,0
-		blr
+		
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
@@ -2714,79 +2958,219 @@ SetNiceValue:
 #********************************************************************************************
 
 TrySemaphorePPC:
-		illegal
-		li	r3,88
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,AttemptSemaphore
+		
+		cntlzw	r30,r3
+		rlwinm	r30,r30,27,5,31
+		subi	r3,r30,1
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 AllocPrivateMem:
-		illegal
-		li	r3,89
-		blr
+		prolog
+		
+		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
+		
+		mr	r30,r3
+		ldaddr	r27,FAllocPrivateMem
+		bl	.UnSupported		
+		li	r3,0
+		
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 FreePrivateMem:
-		illegal
-		li	r3,90
-		blr
+		prolog
+		
+		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
+		
+		mr	r30,r3
+		ldaddr	r27,FFreePrivateMem
+		bl	.UnSupported		
+		li	r3,0
+		
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 ResetPPC:
-		illegal
-		li	r3,91
-		blr
+		prolog
+		
+		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
+		
+		mr	r30,r3
+		ldaddr	r27,FResetPPC
+		bl	.UnSupported		
+		li	r3,0
+		
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 NewListPPC:
-		illegal
-		li	r3,92
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,NewList
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 SetExceptPPC:
-		illegal
-		li	r3,93
-		blr
+		prolog
+		
+		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
+		
+		mr	r30,r3
+		ldaddr	r27,FSetExceptPPC
+		bl	.UnSupported		
+		li	r3,0
+		
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 ObtainSemaphoreSharedPPC:
-		illegal
-		li	r3,94
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,ObtainSemaphoreShared
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 AttemptSemaphoreSharedPPC:
-		illegal
-		li	r3,95
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,AttemptSemaphoreShared
+		
+		cntlzw	r31,r3
+		rlwinm	r31,r31,27,5,31
+		subi	r3,r31,1
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 ProcurePPC:
-		illegal
-		li	r3,96
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,Procure
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 VacatePPC:
-		illegal
-		li	r3,97
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,Vacate
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
 CauseInterrupt:
-		illegal
-		li	r3,98
-		blr
+		prolog
+		
+		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
+		
+		mr	r30,r3
+		ldaddr	r27,FCauseInterrupt
+		bl	.UnSupported		
+		li	r3,0
+		
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 
@@ -2896,9 +3280,32 @@ RawDoFmtPPC:
 #********************************************************************************************
 
 PutPublicMsgPPC:
-		illegal
-		li	r3,104
-		blr
+   		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		stwu	r29,-4(r13)
+		
+		mr      r29,r5
+		mr	r30,r3
+		
+		lwz	r31,libwarp_IExec(r30)
+		CALLOS	r31,FindPort
+    
+		mr.     r4,r3
+		beq	.NoPortFound
+    
+		mr      r5,r29
+		CALLOS	r31,PutMsg
+		
+		li	r3,-1
+
+.NoPortFound:	lwz	r29,0(r13)
+		lwz	r30,4(r13)
+		lwz	r31,8(r13)
+		addi	r13,r13,12
+		
+		epilog
 
 #********************************************************************************************
 
@@ -2917,9 +3324,21 @@ AddUniqueSemaphorePPC:
 #********************************************************************************************
 
 IsExceptionMode:
-		illegal
-		li	r3,107
-		blr
+		prolog
+		
+		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
+		
+		mr	r30,r3
+		ldaddr	r27,FIsExceptionMode
+		bl	.UnSupported		
+		li	r3,0
+		
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		addi	r13,r13,8
+		
+		epilog
 
 #********************************************************************************************
 #********************************************************************************************
@@ -2946,9 +3365,11 @@ WipeOut:
 IDString:	
 .byte	"$VER: powerpc.library 18.0 (01-Jun-16)",0
 
-DebugString:	.byte	"Process: %s Function: %s r4,r5,r6,r7 = %08lx,%08lx,%08lx,%08lx",10,0
-DebugString2:	.byte	"Process: %s Function: %s r3 = %08lx",10,0
+DebugString:		.byte	"Process: %s Function: %s r4,r5,r6,r7 = %08lx,%08lx,%08lx,%08lx",10,0
+DebugString2:		.byte	"Process: %s Function: %s r3 = %08lx",10,0
+UnSupportedString:	.byte	"Unsupported function! Process: %s Function: %s",10,0
 
+FCausePPCInterrupt:		.byte	"FCausePPCInterrupt",0
 FRun68K:			.byte	"Run68K",0
 FWaitFor68K:			.byte	"WaitFor68K",0
 FSPrintF:			.byte	"SPrintF",0

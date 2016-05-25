@@ -40,11 +40,15 @@
 .set WaitPort,			340
 .set AddSemaphore,		348
 .set AttemptSemaphore,		352
+.set AttemptSemaphoreShared,	356
 .set FindSemaphore,		360
 .set InitSemaphore,		364
 .set ObtainSemaphore,		368
+.set ObtainSemaphoreShared,	376
+.set Procure,			380
 .set ReleaseSemaphore,		384
 .set RemSemaphore,		392
+.set Vacate,			396
 .set DeleteTask,		408
 .set OpenLibrary,		424
 .set CloseLibrary,		428
@@ -63,6 +67,7 @@
 .set SetTaskTrap,		588
 .set AllocSysObjectTags,	704
 .set FreeSysObject,		708
+.set NewList,			724
 .set EmulateTags,		744
 .set DebugPrintF,		748
 .set GetCPUInfoTags,		768
