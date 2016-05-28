@@ -19,6 +19,7 @@
 .set FreePooled,		168
 .set FreeVec,			172
 .set Insert,			188
+.set RawDoFmt,			204
 .set RemHead,			208
 .set Remove,			216
 .set RemTail,			220

@@ -886,7 +886,7 @@ RunPPC68K:
 		b	.ExitRunPPC		
 		
 .NotStandard:	li	r3,PPERR_ASYNCERR
-		illegal
+
 .ExitRunPPC:	lwz	r31,0(r13)
 		lwz	r30,4(r13)
 		lwz	r29,8(r13)
@@ -914,8 +914,7 @@ RunPPC68K:
 #********************************************************************************************
 
 WaitForPPC68K:
-		illegal
-		li	r3,1
+		li	r3,PPERR_SUCCESS
 		blr
 
 #********************************************************************************************
@@ -1013,9 +1012,38 @@ FreeVec3268K:
 #********************************************************************************************
 
 SPrintF68K68K:
-		illegal
-		li	r3,5
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		stwu	r29,-4(r13)
+		
+		lwz	r31,REG68K_A6(r3)
+		lwz	r30,libwarp_IExec(r31)
+		lwz	r29,libwarp_IDOS(r31)
+		
+		lwz	r4,REG68K_A0(r3)
+		lwz	r5,REG68K_A1(r3)
+		
+		CALLOS	r29,FPutC
+		
+		mr.	r31,r3
+		beq	.SPrintExit
+		
+		mr	r4,r31
+		
+		CALLOS	r30,DebugPrintF
+		
+		mr	r4,r31
+		
+		CALLOS	r30,FreeVec
+		
+.SPrintExit:	lwz	r29,0(r13)
+		lwz	r30,4(r13)
+		lwz	r31,8(r13)
+		addi	r13,r13,12
+		
+		epilog
 
 #********************************************************************************************
 
@@ -1109,9 +1137,9 @@ SetCache68K68K:
 #********************************************************************************************
 
 CreatePPCTask68K:
-		illegal
-		li	r3,11
-		blr
+		lwz	r4,REG68K_A0(r3)
+		lwz	r3,REG68K_A6(r3)
+		b	CreateTaskPPC
 
 #********************************************************************************************
 
@@ -1225,11 +1253,10 @@ Run68K:
 
 		CALLOS	r29,CacheClearU
 
-.NoCacheClear:	li	r3,0
+.NoCacheClear:	li	r3,PPERR_SUCCESS
 		b	.RunExit
 		
-.RunError68:	illegal
-		li	r3,3
+.RunError68:	li	r3,3
 				
 .RunExit:	ldaddr	r27,FRun68K
 		mr	r28,r3
@@ -1270,16 +1297,44 @@ Run68K:
 #********************************************************************************************
 
 WaitFor68K:
-		illegal
-		li	r3,14
+		li	r3,PPERR_SUCCESS
 		blr
 
 #********************************************************************************************
 
 SPrintF:
-		illegal
-		li	r3,15
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		stwu	r29,-4(r13)
+		
+		lwz	r31,REG68K_A6(r3)
+		lwz	r30,libwarp_IExec(r31)
+		lwz	r29,libwarp_IDOS(r31)
+		
+		lwz	r4,REG68K_A0(r3)
+		lwz	r5,REG68K_A1(r3)
+		
+		CALLOS	r29,FPutC
+		
+		mr.	r31,r3
+		beq	.SPrintExit2
+		
+		mr	r4,r31
+		
+		CALLOS	r30,DebugPrintF
+		
+		mr	r4,r31
+		
+		CALLOS	r30,FreeVec
+		
+.SPrintExit2:	lwz	r29,0(r13)
+		lwz	r30,4(r13)
+		lwz	r31,8(r13)
+		addi	r13,r13,12
+		
+		epilog
 
 #********************************************************************************************
 
@@ -3273,9 +3328,45 @@ FreePooledPPC:
 #********************************************************************************************
 
 RawDoFmtPPC:
-		illegal
-		li	r3,103
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		
+		mr	r30,r3
+		lwz	r31,libwarp_IExec(r30)
+		mr	r0,r5
+		cmpwi	r6,1
+		beq	.RawExit
+		cmpwi	r6,0
+		beq	.RawProc1
+		
+		stw	r6,8(r1)
+		stw	r7,12(r1)
+		ldaddr	r6,.RawProc2
+		addi	r7,r1,8
+		
+.RawProc1:	CALLOS	r31,RawDoFmt
+		
+		mr	r0,r3
+.RawExit:	mr	r3,r0
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
+		addi	r13,r13,8
+		
+		epilog
+		
+.RawProc2:	prolog
+		
+		mr	r9,r4
+		mr	r4,r3
+		lwz	r3,4(r9)
+		lwz	r9,0(r9)
+		mtctr	r9
+		bctrl
+
+		epilog
 
 #********************************************************************************************
 
