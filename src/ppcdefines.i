@@ -31,11 +31,13 @@
 .set libwarp_sr5,100
 .set libwarp_sr6,104
 .set libwarp_sr7,108
-.set libwarp_DebugFlag,112
-.set libwarp_CacheFlag,113
-.set libwarp_pad2,114
-.set libwarp_pad3,115
-.set libwarp_PosSize,116
+.set libwarp_PortSem,112
+.set libwarp_SemSem,158
+.set libwarp_DebugFlag,204
+.set libwarp_CacheFlag,205
+.set libwarp_pad2,206
+.set libwarp_pad3,207
+.set libwarp_PosSize,208
 
 .set EXCDATA_TYPE,8				#Always NT_INTERRUPT
 .set EXCDATA_PRI,9				#This

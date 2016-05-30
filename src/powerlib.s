@@ -70,6 +70,12 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 		mr	r31,r3
 		mr	r29,r5
 		
+		la	r4,libwarp_PortSem(r3)
+		CALLOS	r29,InitSemaphore
+		
+		la	r4,libwarp_SemSem(r31)
+		CALLOS	r29,InitSemaphore
+		
 		li	r4,ASOT_PORT
 		loadreg	r5,ASO_NoTrack
 		stw	r5,8(r1)
@@ -3401,16 +3407,86 @@ PutPublicMsgPPC:
 #********************************************************************************************
 
 AddUniquePortPPC:
-		illegal
-		li	r3,105
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		stwu	r29,-4(r13)
+		stwu	r28,-4(r13)
+		
+		mr	r30,r3
+		mr	r29,r4
+		
+		lwz	r31,libwarp_IExec(r30)
+		la	r4,libwarp_PortSem(r30)		
+		CALLOS	r31,ObtainSemaphore
+		
+		lwz	r4,LN_NAME(r29)
+		CALLOS	r31,FindPort
+		
+		mr.	r28,r3
+		li	r28,UNIPORT_NOTUNIQUE
+		bne	.ExitUPort
+		
+		mr	r4,r29
+		CALLOS	r31,AddPort
+		
+		li	r28,UNIPORT_SUCCESS
+		
+.ExitUPort:	la	r4,libwarp_PortSem(r30)		
+		CALLOS	r31,ReleaseSemaphore
+		
+		mr	r3,r28
+		
+		lwz	r28,0(r13)
+		lwz	r29,4(r13)
+		lwz	r30,8(r13)
+		lwz	r31,12(r13)
+		addi	r13,r13,16
+		
+		epilog		
 
 #********************************************************************************************
 
 AddUniqueSemaphorePPC:
-		illegal
-		li	r3,106
-		blr
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		stwu	r29,-4(r13)
+		stwu	r28,-4(r13)
+		
+		mr	r30,r3
+		mr	r29,r4
+		
+		lwz	r31,libwarp_IExec(r30)
+		la	r4,libwarp_SemSem(r30)		
+		CALLOS	r31,ObtainSemaphore
+		
+		lwz	r4,LN_NAME(r29)
+		CALLOS	r31,FindSemaphore
+		
+		mr.	r28,r3
+		li	r28,UNISEM_NOTUNIQUE
+		bne	.ExitUSem
+		
+		mr	r4,r29
+		CALLOS	r31,AddSemaphore
+		
+		li	r28,UNISEM_SUCCESS
+		
+.ExitUSem:	la	r4,libwarp_SemSem(r30)		
+		CALLOS	r31,ReleaseSemaphore
+		
+		mr	r3,r28
+		
+		lwz	r28,0(r13)
+		lwz	r29,4(r13)
+		lwz	r30,8(r13)
+		lwz	r31,12(r13)
+		addi	r13,r13,16
+		
+		epilog		
 
 #********************************************************************************************
 
