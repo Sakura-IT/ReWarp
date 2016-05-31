@@ -76,6 +76,12 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 		la	r4,libwarp_SemSem(r31)
 		CALLOS	r29,InitSemaphore
 		
+		la	r4,libwarp_MemSem(r31)
+		CALLOS	r29,InitSemaphore
+		
+		la	r4,libwarp_MemList(r31)
+		CALLOS	r29,NewMinList
+		
 		li	r4,ASOT_PORT
 		loadreg	r5,ASO_NoTrack
 		stw	r5,8(r1)
@@ -428,6 +434,7 @@ ExceptionHandler:
 		tlbwe	r0,r0,0					#Should be tlbwe in BookE
 		li	r3,1
 		b	.ExcDone
+
 #********************************************************************************************	
 
 .DebugStartOutPut:						#Function(r27),r4,r5,r6,r7
@@ -702,7 +709,7 @@ IExpunge:
 #********************************************************************************************
 #********************************************************************************************
 
-Open68K:
+Open68K:	
 		li	r3,0
 		blr
 
@@ -989,7 +996,7 @@ AllocVec3268K:
 		and	r5,r0,r5
 		lwz	r30,libwarp_IExec(r31)
 		CALLOS	r30,AllocVec
-		
+			
 		lwz	r30,0(r13)
 		lwz	r31,4(r13)
 		addi	r13,r13,8
@@ -1006,9 +1013,9 @@ FreeVec3268K:
 		
 		lwz	r31,REG68K_A6(r3)
 		lwz	r4,REG68K_A1(r3)
-		lwz	r30,libwarp_IExec(r31)
+		lwz	r30,libwarp_IExec(r31)	
 		CALLOS	r30,FreeVec
-		
+				
 		lwz	r30,0(r13)
 		lwz	r31,4(r13)
 		addi	r13,r13,8
@@ -1363,14 +1370,16 @@ Run68KLowLevel:
 
 #********************************************************************************************
 
-AllocVecPPC:						#NEEDS MEMLIST
+AllocVecPPC:	
 		prolog
 		
 		stwu	r31,-4(r13)
 		stwu	r30,-4(r13)
+		stwu	r29,-4(r13)
 		stwu	r27,-4(r13)
 		
 		mr	r30,r3
+		addi	r4,r4,32
 		
 		ldaddr	r27,FAllocVecPPC	
 		bl	.DebugStartOutPut
@@ -1381,37 +1390,71 @@ AllocVecPPC:						#NEEDS MEMLIST
 		
 		CALLOS	r31,AllocVec
 		
-		bl	.DebugEndOutPut
+		mr.	r29,r3
+		beq	.MemError
+
+		li	r4,0
+		CALLOS	r31,FindTask
+		
+		stw	r3,8(r29)
+		la	r4,libwarp_MemSem(r30)
+		CALLOS	r31,ObtainSemaphore
+		
+		la	r4,libwarp_MemList(r30)
+		mr	r5,r29
+		CALLOS	r31,AddHead
+		
+		la	r4,libwarp_MemSem(r30)
+		CALLOS	r31,ReleaseSemaphore
+		
+		addi	r3,r29,32
+		
+.MemError:	bl	.DebugEndOutPut
 		
 		lwz	r27,0(r13)
-		lwz	r30,4(r13)
-		lwz	r31,8(r13)
-		addi	r13,r13,12
+		lwz	r29,4(r13)
+		lwz	r30,8(r13)
+		lwz	r31,12(r13)
+		addi	r13,r13,16
 		
 		epilog
 
 #********************************************************************************************
 
-FreeVecPPC:						#NEEDS MEMLIST
+FreeVecPPC:
 		prolog
 		
 		stwu	r31,-4(r13)
 		stwu	r30,-4(r13)
+		stwu	r29,-4(r13)
 		stwu	r27,-4(r13)
 		
 		mr	r30,r3
+		subi	r29,r4,32
 		
 		ldaddr	r27,FFreeVecPPC	
 		bl	.DebugStartOutPut
 		
 		lwz	r31,libwarp_IExec(r30)
+		la	r4,libwarp_MemSem(r30)
+		CALLOS	r31,ObtainSemaphore
 		
+		mr	r4,r29
+		CALLOS	r31,Remove
+		
+		la	r4,libwarp_MemSem(r30)
+		CALLOS	r31,ReleaseSemaphore
+		
+		mr	r4,r29
 		CALLOS	r31,FreeVec
 		
+		li	r3,0
+		
 		lwz	r27,0(r13)
-		lwz	r30,4(r13)
-		lwz	r31,8(r13)
-		addi	r13,r13,12
+		lwz	r29,4(r13)
+		lwz	r30,8(r13)
+		lwz	r31,12(r13)
+		addi	r13,r13,16
 		
 		epilog
 
@@ -2726,9 +2769,53 @@ ReplyMsgPPC:
 
 #********************************************************************************************
 
-FreeAllMem:					#NEEDS IMPLEMENTATION
-		li	r3,0
-		blr
+FreeAllMem:
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		stwu	r29,-4(r13)
+		stwu	r28,-4(r13)
+		stwu	r26,-4(r13)
+
+		mr	r30,r3
+		lwz	r31,libwarp_IExec(r30)
+		la	r4,libwarp_MemSem(r30)
+		CALLOS	r31,ObtainSemaphore
+		
+		li	r4,0
+		CALLOS	r31,FindTask
+		
+		mr	r26,r3
+		lwz	r29,libwarp_MemList(r30)
+.NxtInList:	lwz	r28,LN_SUCC(r29)
+		mr.	r28,r28
+		beq	.EndOfList
+		lwz	r0,8(r29)
+		cmpw	r26,r0
+		beq	.FndTask
+.GetNxtList:	mr	r29,r28
+		b	.NxtInList
+		
+.FndTask:	mr	r4,r29
+		CALLOS	r31,Remove
+		
+		mr	r4,r29
+		CALLOS	r31,FreeVec
+		
+		b	.GetNxtList		
+
+.EndOfList:	la	r4,libwarp_MemSem(r30)
+		CALLOS	r31,ReleaseSemaphore
+		
+		lwz	r26,0(r13)
+		lwz	r28,4(r13)
+		lwz	r29,8(r13)
+		lwz	r30,12(r13)
+		lwz	r31,16(r13)
+		addi	r13,r13,20
+		
+		epilog
 
 #********************************************************************************************
 
@@ -2771,10 +2858,10 @@ AllocXMsgPPC:
 		
 		CALLOS	r31,AllocVec
 		
-		mr.     r30,r3
+		mr.     r3,r3
 		beq-    .NoMsgMem
-		sth     r28,MN_LENGTH(r30)
-		stw     r29,MN_REPLYPORT(r30)
+		sth     r28,MN_LENGTH(r3)
+		stw     r29,MN_REPLYPORT(r3)
 		
 .NoMsgMem:	bl	.DebugEndOutPut
 		
@@ -2786,7 +2873,6 @@ AllocXMsgPPC:
 		addi	r13,r13,20
 
 		epilog
-
 
 #********************************************************************************************
 

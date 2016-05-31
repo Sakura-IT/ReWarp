@@ -69,6 +69,7 @@
 .set AllocSysObjectTags,	704
 .set FreeSysObject,		708
 .set NewList,			724
+.set NewMinList,		728
 .set EmulateTags,		744
 .set DebugPrintF,		748
 .set GetCPUInfoTags,		768
