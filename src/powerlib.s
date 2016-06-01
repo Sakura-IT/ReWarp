@@ -558,7 +558,8 @@ ExceptionHandler:
 		addi	r13,r13,24
 		
 
-		epilog	
+		epilog
+			
 #********************************************************************************************		
 
 .UnSupported:						#Function(r27)
@@ -2560,10 +2561,132 @@ ChangeMMU:
 
 #********************************************************************************************
 
-GetInfo:	
-				#NEEDS IMPLEMENTATION
-		li	r3,0
-		blr
+GetInfo:
+		prolog
+		
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		stwu	r29,-4(r13)
+		stwu	r28,-4(r13)
+		stwu	r27,-4(r13)
+		stwu	r26,-4(r13)
+		stwu	r25,-4(r13)
+		stwu	r24,-4(r13)
+		stwu	r23,-4(r13)
+		stwu	r22,-4(r13)
+		stwu	r21,-4(r13)
+		stwu	r20,-4(r13)
+		
+		mr	r30,r3
+		stw	r4,72(r1)
+		addi	r25,r1,72
+		lwz	r31,libwarp_IExec(r30)
+		lwz	r24,libwarp_IUtility(r30)
+		
+		loadreg	r29,GCIT_Model
+		loadreg	r28,GCIT_FrontSideSpeed
+		loadreg	r26,GCIT_ProcessorSpeed
+		addi	r0,r1,40
+		stw	r29,8(r1)
+		stw	r0,12(r1)
+		addi	r0,r1,48
+		stw	r28,16(r1)
+		stw	r0,20(r1)
+		addi	r0,r1,56
+		stw	r26,24(r1)
+		stw	r0,28(r1)
+		li	r0,TAG_DONE
+		stw	r0,32(r1)
+		CALLOS	r31,GetCPUInfoTags
+		
+		li	r4,0
+		li	r5,0
+		CALLOS	r31,CacheControl
+		
+		rlwinm	r0,r3,0,22,23
+		clrlwi	r22,r3,30
+		cmpwi	cr7,r0,512
+		cmpwi	cr3,r0,768
+		cmpwi	cr4,r22,3
+		cmpwi	cr2,r22,1
+		mfcr	r21
+		rlwinm	r21,r21,28,0,3		
+		ldaddr	r23,GetInfoTable
+		
+.NxtGITag:	mr	r4,r25
+		CALLOS	r24,NextTagItem
+		
+		mr.	r29,r3
+		beq	.EndGInfo
+		
+		lwz	r3,0(r29)
+		loadreg	r20,PPCINFO_CPU
+		sub	r3,r3,r20
+		cmpwi	r3,7
+		bgt	.NxtGITag	
+		rlwinm	r0,r3,2,0,29
+		lwzx	r20,r23,r0
+		mtctr	r20
+		bctr
+	
+.EndGInfo:	lwz	r20,0(r13)
+		lwz	r21,4(r13)
+		lwz	r22,8(r13)
+		lwz	r23,12(r13)
+		lwz	r24,16(r13)
+		lwz	r25,20(r13)
+		lwz	r26,24(r13)
+		lwz	r27,28(r13)
+		lwz	r28,32(r13)
+		lwz	r29,36(r13)
+		lwz	r30,40(r13)
+		lwz	r31,44(r13)
+		addi	r13,r13,48
+	
+		epilog
+		
+.tagCPU:	lwz	r0,40(r1)
+		cmpwi	r0,CPUTYPE_603E
+		beq	.CPU603E
+		cmpwi	r0,CPUTYPE_604E
+		bne	.NxtGITag
+		
+		lis	r0,CPUF_604E@h
+		stw	r0,4(r29)
+		b	.NxtGITag
+		
+.CPU603E:	li	r0,CPUF_603E
+		stw	r0,4(r29)
+		b	.NxtGITag
+					
+.tagPVR:	CALLOS	r31,SuperState
+		mfpvr	r28
+		mr.	r4,r3
+		beq	.WasSuper
+		CALLOS	r31,UserState
+		
+.WasSuper:	stw	r28,4(r29)
+		b	.NxtGITag
+				
+.tagICACHE:	nop
+		b	.NxtGITag
+		
+.tagDCACHE:	nop
+		b	.NxtGITag
+
+.tagPAGETABLE:	nop
+		b	.NxtGITag
+
+.tagTABLESIZE:	nop
+		b	.NxtGITag
+		
+.tagBUSCLOCK:	lwz	r0,52(r1)
+		stw	r0,4(r29)
+		b	.NxtGITag
+		
+.tagCPUCLOCK:	lwz	r0,60(r1)
+		stw	r0,4(r29)
+		b	.NxtGITag			
 
 #********************************************************************************************
 
@@ -3729,6 +3852,10 @@ JumpTable:
 .long	.tagREGR2,.tagREG,.tagREG,.tagREG,.tagREG,.tagREG,.tagREG,.tagREG,.tagREG
 .long	.DoNextTag,.tagMOTHERPRI,.DoNextTag,.DoNextTag,.tagNICE,.tagINHERITR2,.DoNextTag
 .long	.DoNextTag
+
+GetInfoTable:
+.long	.tagCPU,.tagPVR,.tagICACHE,.tagDCACHE,.tagPAGETABLE,.tagTABLESIZE
+.long	.tagBUSCLOCK,.tagCPUCLOCK
 
 #********************************************************************************************
 

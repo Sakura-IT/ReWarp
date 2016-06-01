@@ -66,6 +66,7 @@
 .set SuperState,		576
 .set UserState,			580
 .set SetTaskTrap,		588
+.set CacheControl,		648
 .set AllocSysObjectTags,	704
 .set FreeSysObject,		708
 .set NewList,			724
