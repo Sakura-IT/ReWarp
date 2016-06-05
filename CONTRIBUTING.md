@@ -7,12 +7,13 @@
 We are using [GitHub Issues](https://github.com/Sakura-IT/ReWarp/issues) to track problems.
 
 When creting a new issue, please include the following information:
-* ReWarp build number, or if you built the source yourself, date of the source snapshot
-* Exact AmigaOS version (for example "AmigaOS 4.1 Update 6")
-* CPU model (for example "PowerPC 460")
+* ReWarp build number, or if you built the source yourself, date of the source snapshot.
+* Exact AmigaOS version (for example "AmigaOS 4.1 Update 6").
+* CPU model (for example "PowerPC 460").
+* Graphics card model (for example "Radeon HD 7750").
 * If the software uses Warp3D: 
-  * Which Warp3D implementation did you use (Warp3D v5 or Wazp3D)
-  * Whether any Warp3D patch was used, like PatchWarp3D
+  * Which Warp3D implementation did you use (Warp3D, Wazp3D), please also report the exact version.
+  * Whether any Warp3D patch was used, like PatchWarp3D.
 
 ## Sending patches 
 
