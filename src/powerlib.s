@@ -1738,6 +1738,7 @@ DeleteTaskPPC:
 		stwu	r30,-4(r13)
 		stwu	r29,-4(r13)
 
+		mr	r30,r3
 		lhz	r29,lib_OpenCnt(r30)
 		lwz	r31,libwarp_IExec(r30)
 		subi	r29,r29,1
