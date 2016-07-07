@@ -147,7 +147,7 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 		CALLOS	r29,GetInterface
 		mr.	r28,r3
 		beq	.ErrorExp
-		stw	r28,libwarp_IDOS(r31)
+		stw	r28,libwarp_IDOS(r31)		
 						
 		ldaddr	r4,UtilLib
 		li	r5,52
@@ -1034,12 +1034,12 @@ SPrintF68K68K:
 		
 		lwz	r31,REG68K_A6(r3)
 		lwz	r30,libwarp_IExec(r31)
-		lwz	r29,libwarp_IDOS(r31)
+		lwz	r29,libwarp_IUtility(r31)
 		
 		lwz	r4,REG68K_A0(r3)
 		lwz	r5,REG68K_A1(r3)
 		
-		CALLOS	r29,FPutC
+		CALLOS	r29,VASPrintf
 		
 		mr.	r31,r3
 		beq	.SPrintExit
@@ -1323,14 +1323,10 @@ SPrintF:
 		stwu	r30,-4(r13)
 		stwu	r29,-4(r13)
 		
-		lwz	r31,REG68K_A6(r3)
-		lwz	r30,libwarp_IExec(r31)
-		lwz	r29,libwarp_IDOS(r31)
+		lwz	r30,libwarp_IExec(r3)
+		lwz	r29,libwarp_IUtility(r3)
 		
-		lwz	r4,REG68K_A0(r3)
-		lwz	r5,REG68K_A1(r3)
-		
-		CALLOS	r29,FPutC
+		CALLOS	r29,VASPrintf
 		
 		mr.	r31,r3
 		beq	.SPrintExit2

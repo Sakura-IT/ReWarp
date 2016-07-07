@@ -88,6 +88,7 @@
 .set FindTagItem,		96
 .set GetTagData,		104
 .set NextTagItem,		112
+.set VASPrintf,			292
 .set MoveMem,			312
 
 # Dos
