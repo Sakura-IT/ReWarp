@@ -817,6 +817,7 @@ RunPPC68K:
 		
 		andi.	r0,r17,PPF_LINEAR
 		beq	.NotLinear
+		
 		mr	r5,r22
 		mr	r6,r23
 		mr	r7,r24
@@ -844,6 +845,7 @@ RunPPC68K:
 .JustCode:	mtlr	r17
 		stw	r2,20(r1)
 		lwz	r17,0(r17)				#Force TBL
+		
 		blrl
 		
 		lwz	r16,0(r13)
@@ -1668,7 +1670,7 @@ NewProc:	prolog
 		stwu	r31,-4(r13)
 			
 		mr	r16,r3
-		mr	r3,r30			
+		mr	r3,r30	
 					
 		b	.SNewProc	
 	
@@ -1699,11 +1701,11 @@ NewProc:	prolog
 		stw	r0,0(r27)
 		b	.DoNextTag
 		
-.tagREG:	subis	r0,r20,TASKATTR_CODE@h
-		subi	r0,r0,TASKATTR_R2@l
+.tagREG:	subis	r9,r20,TASKATTR_CODE@h
+		subi	r0,r9,TASKATTR_R2@l
 		rlwinm	r9,r0,2,0,29
 		lwz	r0,4(r26)
-		stwx	r0,r27,r9	
+		stwx	r0,r27,r9
 		b	.DoNextTag
 
 .tagINHERITR2:	lwz	r25,4(r26)
