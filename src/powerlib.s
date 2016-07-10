@@ -789,6 +789,7 @@ RunPPC68K:
 		CALLOS	r31,FindTask
 		cmpw	r3,r27
 		stw	r3,libwarp_CachedTask(r26)
+		stwu	r26,-4(r13)
 		stwu	r31,-4(r13)
 		stwu	r16,-4(r13)
 		beq	.NoFlushNeeded
@@ -886,12 +887,12 @@ RunPPC68K:
 		stfd	f8,PP_FREGS+7*8(r16)
 		
 		lwz	r31,4(r13)
-		addi	r13,r13,8
+		lwz	r30,8(r13)
+		addi	r13,r13,12
 		
-		lwz	r30,Data_LibBase(r31)
 		lwz	r4,libwarp_MachineFlag(r30)
 		mr.	r4,r4
-		beq	.NoTrapRemove
+		beq	.NoTrapRemove			
 				
 		lis	r4,TRAPNUM_INST_SEGMENT_VIOLATION
 		li	r5,0
