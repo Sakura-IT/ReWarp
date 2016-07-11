@@ -38,6 +38,7 @@
 .set	_LVODOSPrivate1,	-162
 .set	_LVOInternalLoadSeg,	-756
 .set 	_LVONewLoadSeg,		-768
+.set	_LVOSetJoyPortAttrsA,	-132
 
 .set	ET_Offset,		0x80000015
 

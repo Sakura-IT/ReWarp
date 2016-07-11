@@ -1200,19 +1200,33 @@ Run68K:
 		lwz	r5,PP_OFFSET(r31)
 		lwz	r6,PP_FLAGS(r31)
 		lwz	r4,PP_CODE(r31)
+		
 		mr	r26,r4
+		mr	r28,r5
+		
 		ldaddr	r27,FRun68K	
 		bl	.DebugStartOutPut
 		
 		lwz	r29,libwarp_IExec(r30)
+		mr.	r28,r28
+		beq	.ReturnACheck
+		
 		lwz	r27,Data_LibBase(r29)
 		cmpw	r27,r26
 		beq	.CheckExec	
 	
-.ReturnECheck:	lwz	r27,libwarp_IDOS(r30)
+		lwz	r27,libwarp_IDOS(r30)
 		lwz	r27,Data_LibBase(r27)
 		cmpw	r27,r26
 		beq	.CheckDOS
+		
+		lwz	r27,LN_NAME(r26)
+		mr.	r27,r27
+		beq	.ReturnACheck
+		loadreg	r4,'lowl'
+		lwz	r27,0(r27)
+		cmpw	r4,r27
+		beq	.CheckLow		
 		
 .ReturnACheck:	lwz	r27,PP_FLAGS(r31)
 		mr.	r27,r27
@@ -1298,7 +1312,7 @@ Run68K:
 		cmpwi	r27,_LVOOpenLibrary
 		beq	.SetCFlag
 		cmpwi	r27,_LVOOldOpenLibrary
-		bne	.ReturnECheck
+		bne	.ReturnACheck
 .SetCFlag:	li	r25,1
 		b	.ReturnACheck
 
@@ -1312,7 +1326,16 @@ Run68K:
 		cmpwi	r27,_LVONewLoadSeg
 		beq	.SetCFlag
 		b	.ReturnACheck
-
+		
+.CheckLow:	lwz	r27,PP_OFFSET(r31)
+		cmpwi	r27,_LVOSetJoyPortAttrsA
+		bne	.ReturnACheck
+		
+		lwz	r27,664(r26)		
+		mr.	r27,r27
+		beq	.RunError68
+		b	.ReturnACheck
+		
 #********************************************************************************************
 
 WaitFor68K:
