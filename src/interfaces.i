@@ -74,6 +74,8 @@
 .set EmulateTags,		744
 .set DebugPrintF,		748
 .set GetCPUInfoTags,		768
+.set GetHead,			808
+.set GetSucc,			816
 
 # Timer
 .set AddTime,			76

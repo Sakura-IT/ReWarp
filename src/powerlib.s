@@ -82,6 +82,9 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 		la	r4,libwarp_MemList(r31)
 		CALLOS	r29,NewMinList
 		
+		la	r4,libwarp_TaskList(r31)
+		CALLOS	r29,NewMinList
+		
 		li	r4,ASOT_PORT
 		loadreg	r5,ASO_NoTrack
 		stw	r5,8(r1)
@@ -396,7 +399,7 @@ ExceptionHandler:
 		lwz	r30,16(r13)
 		lwz	r31,20(r13)
 		addi	r13,r13,24		
-		b	.ExcExit	
+		b	.ExcExit		
 		
 .ISIPPC500:	mfmsr	r25
 		rlwinm	r26,r25,27,31,31			#Get MSR[IS]
@@ -889,16 +892,7 @@ RunPPC68K:
 		
 		lwz	r31,4(r13)
 		lwz	r30,8(r13)
-		addi	r13,r13,12
-		
-		lwz	r4,libwarp_MachineFlag(r30)
-		mr.	r4,r4
-		beq	.NoTrapRemove			
-				
-		lis	r4,TRAPNUM_INST_SEGMENT_VIOLATION
-		li	r5,0
-		li	r6,0
-		CALLOS	r31,SetTaskTrap		
+		addi	r13,r13,12	
 								
 .NoTrapRemove:	li	r3,PPERR_SUCCESS
 		b	.ExitRunPPC		
@@ -1226,7 +1220,7 @@ Run68K:
 		loadreg	r4,'lowl'
 		lwz	r27,0(r27)
 		cmpw	r4,r27
-		beq	.CheckLow		
+#		beq	.CheckLow		
 		
 .ReturnACheck:	lwz	r27,PP_FLAGS(r31)
 		mr.	r27,r27
@@ -1507,7 +1501,7 @@ CreateTaskPPC:
 		stwu	r16,-4(r13)
 
 		stw	r4,200(r1)
-		addi	r28,r1,200
+		addi	r28,r1,200	
 		
 		lis	r16,1
 		li	r21,0				#name
@@ -1517,6 +1511,10 @@ CreateTaskPPC:
 		li	r25,0				#inherit_flag
 
 		mr	r30,r3
+		
+		ldaddr	r27,FCreateTaskPPC	
+		bl	.DebugStartOutPut
+		
 		lwz	r31,libwarp_IExec(r30)
 		lwz	r29,libwarp_IUtility(r30)
 		addi	r27,r1,100
@@ -1544,9 +1542,39 @@ CreateTaskPPC:
 .ErrorCreate:	li	r3,0
 		b	.ExitCreate		
 		
-.CorrectCreate:	nop
+.CorrectCreate:	mr	r29,r3
+		loadreg	r5,MEMF_SHARED|MEMF_CLEAR
+		li	r4,TASKPPC_MSGPORT+4
+		CALLOS	r31,AllocVec
+		
+		lwz	r28,LN_NAME(r29)
+		stw	r28,LN_NAME(r3)
+		la	r28,pr_MsgPort(r29)
+		stw	r28,TASKPPC_MSGPORT(r3)
+		li	r28,NT_PROCESS
+		stb	r28,LN_TYPE(r3)
+		stw	r29,TASKPPC_TASKPTR(r3)
+		mr	r28,r3
+		li	r0,21
+		mfctr	r4
+		la	r29,8(r29)
+		la	r3,8(r3)
+		mtctr	r0
+		
+.CopyTask2:	lwzu	r0,4(r29)
+		stwu	r0,4(r3)
+		bdnz	.CopyTask2
+		
+		mtctr	r4
+		la	r4,libwarp_TaskList(r30)
+		mr	r5,r28
+		CALLOS	r31,AddHead
+		mr	r3,r28		
 				
-.ExitCreate:	lwz	r16,0(r13)
+.ExitCreate:	ldaddr	r27,FCreateTaskPPC
+		bl	.DebugEndOutPut
+		
+		lwz	r16,0(r13)
 		lwz	r17,4(r13)
 		lwz	r18,8(r13)
 		lwz	r19,12(r13)
@@ -1765,19 +1793,47 @@ DeleteTaskPPC:
 		stwu	r31,-4(r13)
 		stwu	r30,-4(r13)
 		stwu	r29,-4(r13)
+		stwu	r27,-4(r13)
 
 		mr	r30,r3
+
+		ldaddr	r27,FFindTaskPPC	
+		bl	.DebugStartOutPut
+	
 		lhz	r29,lib_OpenCnt(r30)
 		lwz	r31,libwarp_IExec(r30)
 		subi	r29,r29,1
 		sth	r29,lib_OpenCnt(r30)
 		
-		CALLOS	r31,DeleteTask
+		mr	r29,r4
+		lwz	r4,libwarp_TaskList(r30)
+		CALLOS	r31,GetHead
+		mr.	r4,r3
+		beq	.LEmpty
+		
+.ReTestList:	cmpw	r4,r29
+		beq	.PseudoTask
+		
+		CALLOS	r31,GetSucc
+		mr.	r4,r3
+		beq	.LEmpty
+		b	.ReTestList
+		
+.PseudoTask:	lwz	r29,TASKPPC_TASKPTR(r4)
+		mr	r27,r4		
+		CALLOS	r31,Remove
+		
+		mr	r4,r27
+		CALLOS	r31,FreeVec
+		
+.LEmpty:	mr	r4,r29
+		CALLOS	r31,DeleteTask				#Needs adjustment to Pseudo task
 
-		lwz	r29,0(r13)
-		lwz	r30,4(r13)
-		lwz	r31,8(r13)
-		addi	r13,r13,12
+		lwz	r27,0(r13)
+		lwz	r29,4(r13)
+		lwz	r30,8(r13)
+		lwz	r31,12(r13)
+		addi	r13,r13,16
 		
 		epilog
 
@@ -1788,21 +1844,70 @@ FindTaskPPC:
 		
 		stwu	r31,-4(r13)
 		stwu	r30,-4(r13)
+		stwu	r29,-4(r13)
+		stwu	r28,-4(r13)
 		stwu	r27,-4(r13)
 		
 		mr	r30,r3
 		ldaddr	r27,FFindTaskPPC	
 		bl	.DebugStartOutPut
 		
+		mr	r5,r4
+		mr.	r28,r4
 		lwz	r31,libwarp_IExec(r30)
-		CALLOS	r31,FindTask
+		la	r4,libwarp_TaskList(r30)
+		bne	.NoSelf
 		
-		bl	.DebugEndOutPut
+		mr	r4,r28
+		CALLOS	r31,FindTask
+		lwz	r5,LN_NAME(r3)
+		mr	r29,r3
+		la	r4,libwarp_TaskList(r30)
+		
+.NoSelf:	CALLOS	r31,FindName
+		
+		mr.	r28,r28
+		bne	.NoSelf2
+
+		mr. 	r3,r3
+		bne	.NoSelf2
+		
+		loadreg	r5,MEMF_SHARED|MEMF_CLEAR
+		li	r4,TASKPPC_MSGPORT+4
+		CALLOS	r31,AllocVec
+		
+		lwz	r28,LN_NAME(r29)
+		stw	r28,LN_NAME(r3)
+		la	r28,pr_MsgPort(r29)
+		stw	r28,TASKPPC_MSGPORT(r3)
+		li	r28,NT_PROCESS
+		stb	r28,LN_TYPE(r3)
+		stw	r29,TASKPPC_TASKPTR(r3)
+		mr	r28,r3
+		
+		li	r0,21
+		mfctr	r5
+		la	r29,8(r29)
+		la	r3,8(r3)
+		mtctr	r0
+.CopyTask:	lwzu	r0,4(r29)
+		stwu	r0,4(r3)
+		bdnz	.CopyTask
+		
+		mtctr	r5
+		mr	r5,r28
+		la	r4,libwarp_TaskList(r30)
+		CALLOS	r31,AddHead
+		mr	r3,r28
+		
+.NoSelf2:	bl	.DebugEndOutPut
 		
 		lwz	r27,0(r13)
-		lwz	r30,4(r13)
-		lwz	r31,8(r13)
-		addi	r13,r13,12
+		lwz	r28,4(r13)
+		lwz	r29,8(r13)
+		lwz	r30,12(r13)
+		lwz	r31,16(r13)
+		addi	r13,r13,20
 		
 		epilog
 
@@ -2041,15 +2146,21 @@ FindNamePPC:
 		
 		stwu	r31,-4(r13)
 		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
 		
 		mr	r30,r3
+		
+		ldaddr	r27,FFindNamePPC
+		bl	.DebugStartOutPut
+		
 		lwz	r31,libwarp_IExec(r30)
 		
 		CALLOS	r31,FindName
 		
-		lwz	r30,0(r13)
-		lwz	r31,4(r13)
-		addi	r13,r13,8
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		lwz	r31,8(r13)
+		addi	r13,r13,12
 		
 		epilog
 
@@ -2817,14 +2928,20 @@ FindPortPPC:
 		
 		stwu	r31,-4(r13)
 		stwu	r30,-4(r13)
+		stwu	r27,-4(r13)
 		
 		mr	r30,r3
+		
+		ldaddr	r27,FFindPortPPC
+		bl	.DebugStartOutPut
+		
 		lwz	r31,libwarp_IExec(r30)
 		CALLOS	r31,FindPort
 		
-		lwz	r30,0(r13)
-		lwz	r31,4(r13)
-		addi	r13,r13,8
+		lwz	r27,0(r13)
+		lwz	r30,4(r13)
+		lwz	r31,8(r13)
+		addi	r13,r13,12
 		
 		epilog
 
