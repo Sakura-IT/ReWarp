@@ -1199,7 +1199,7 @@ Run68K:
 		mr	r28,r5
 		
 		ldaddr	r27,FRun68K	
-		bl	.DebugStartOutPut
+#		bl	.DebugStartOutPut
 		
 		lwz	r29,libwarp_IExec(r30)
 		mr.	r28,r28
@@ -1288,7 +1288,7 @@ Run68K:
 .RunExit:	ldaddr	r27,FRun68K
 		mr	r28,r3
 		lwz	r3,PP_REGS(r31)
-		bl	.DebugEndOutPut
+#		bl	.DebugEndOutPut
 		mr	r3,r28
 		
 		lwz	r28,0(r1)
@@ -2273,7 +2273,7 @@ SetSignalPPC:
 		stwu	r31,-4(r13)
 		stwu	r30,-4(r13)
 		
-		mr	r30,r3
+		mr	r30,r3		
 		
 		lwz	r31,libwarp_IExec(r30)
 		CALLOS	r31,SetSignal
@@ -2294,6 +2294,8 @@ SignalPPC:
 		
 		mr	r30,r3
 		lwz	r31,libwarp_IExec(r30)
+		lwz	r4,TASKPPC_TASKPTR(r4)
+		
 		CALLOS	r31,Signal
 		
 		lwz	r30,0(r13)
@@ -2309,8 +2311,9 @@ WaitPPC:
 		
 		stwu	r31,-4(r13)
 		stwu	r30,-4(r13)
-		
+
 		mr	r30,r3
+		
 		lwz	r31,libwarp_IExec(r30)
 		CALLOS	r31,Wait
 		
@@ -2329,6 +2332,7 @@ SetTaskPriPPC:
 		stwu	r30,-4(r13)
 		
 		extsb	r5,r5
+		lwz	r4,TASKPPC_TASKPTR(r4)
 		mr	r30,r3
 		lwz	r31,libwarp_IExec(r30)
 		CALLOS	r31,SetTaskPri
