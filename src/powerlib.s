@@ -849,7 +849,7 @@ RunPPC68K:
 		
 .JustCode:	mtlr	r17
 		stw	r2,20(r1)
-		lwz	r17,0(r17)				#Force TBL
+		lwz	r17,0(r17)				#Force TBL load
 		
 		blrl
 		
@@ -1290,6 +1290,10 @@ Run68K:
 		lwz	r3,PP_REGS(r31)
 		bl	.DebugEndOutPut
 		mr	r3,r28
+		
+		lwz	r28,0(r1)
+		lwz	r25,-8(r28)
+		lwz	r26,0(r25)				#Force TBL load				
 		
 		lwz	r25,0(r13)
 		lwz	r26,4(r13)
