@@ -19,4 +19,3 @@ https://github.com/Sakura-IT/ReWarp/wiki
 
 Automated binary builds are available from Jenkins: https://sonnet.uguu.waw.pl/jenkins/job/ReWarp/ .
 
-
