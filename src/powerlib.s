@@ -60,13 +60,9 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 		li	r0,0
 		stb	r11,LN_PRI(r3)
 		stb	r0,libwarp_CacheFlag(r3)
-		sth	r0,lib_Revision(r3)
-		
-#		li	r0,1					#Debug ON
-		
+		sth	r0,lib_Revision(r3)		
 		stw	r9,lib_IdString(r3)
 		stw	r5,libwarp_IExec(r3)
-		stb	r0,libwarp_DebugFlag(r3)
 		mr	r31,r3
 		mr	r29,r5
 		
@@ -361,209 +357,163 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 #********************************************************************************************
 		
 ExceptionHandler:
-		prolog	100
 		lis	r0,TRAPNUM_INST_SEGMENT_VIOLATION
 		cmpw	r5,r0
 		beq	.ItsAnISI
+		lis	r0,TRAPNUM_ALIGNMENT
+		cmpw	r5,r0
+		beq	.ItsAlignment
 		li	r3,0
-.ExcExit:	epilog		
+.ExcExit:	blr
 		
-.ItsAnISI:	stwu	r31,-4(r13)
-		stwu	r30,-4(r13)
-		stwu	r29,-4(r13)
-		stwu	r28,-4(r13)
-		stwu	r26,-4(r13)
-		stwu	r25,-4(r13)
-		lwz	r31,ExceptionContext_ip(r3)
-		rlwinm.	r29,r31,0,0,19
+#***********************************************
+		
+.ItsAnISI:	lwz	r9,ExceptionContext_ip(r3)
+		rlwinm.	r7,r9,0,0,19
 		li	r3,0
-		beq	.ExcDone
-		lis	r29,WarpLibBase@ha
-		lwz	r29,WarpLibBase@l(r29)
-		lwz	r29,libwarp_MachineFlag(r29)
-		cmpwi	r29,MACHF_PPC500LIKE
-		lwz	r29,0(r31)				#Force TLB update
+		beq	.ExcExit
+		lis	r7,WarpLibBase@ha
+		lwz	r7,WarpLibBase@l(r7)
+		lwz	r7,libwarp_MachineFlag(r7)
+		cmpwi	r7,MACHF_PPC500LIKE
+		lwz	r7,0(r9)				#Force TLB update
 		beq	.ISIPPC500
 		
-		tlbsx.	r29,r0,r31
-		bne	.ExcDone
-		tlbre	r26,r29,2
-		ori	r26,r26,TLB_UX|TLB_SX
-		tlbwe 	r26,r29,2		
+		tlbsx.	r7,r0,r9
+		bne	.ExcExit
+		tlbre	r5,r7,2
+		ori	r5,r5,TLB_UX|TLB_SX
+		tlbwe 	r5,r7,2		
 		li	r3,1
-	
-.ExcDone:	lwz	r25,0(r13)
-		lwz	r26,4(r13)
-		lwz	r28,8(r13)
-		lwz	r29,12(r13)
-		lwz	r30,16(r13)
-		lwz	r31,20(r13)
-		addi	r13,r13,24		
-		b	.ExcExit		
+		blr
 		
-.ISIPPC500:	mfmsr	r25
-		rlwinm	r26,r25,27,31,31			#Get MSR[IS]
-		mfspr	r25,PID0
-		slwi	r25,r25,16
-		or	r25,r25,r26
-		mtspr	MAS6,r25
+#***********************************************
+	
+.ISIPPC500:	mfmsr	r4
+		rlwinm	r5,r4,27,31,31				#Get MSR[IS]
+		mfspr	r4,PID0
+		slwi	r4,r4,16
+		or	r4,r4,r5
+		mtspr	MAS6,r4
 		isync
-		tlbsx	r0,r0,r31
-		mfspr	r25,MAS1
-		andis.	r25,r25,MAS1_VALID@h
+		tlbsx	r0,r0,r9
+		mfspr	r4,MAS1
+		andis.	r4,r4,MAS1_VALID@h
 		bne	.GotTBL
-		mfspr	r25,PID1
-		slwi	r25,r25,16
-		or	r25,r25,r26
-		mtspr	MAS6,r25
+		mfspr	r4,PID1
+		slwi	r4,r4,16
+		or	r4,r4,r5
+		mtspr	MAS6,r4
 		isync
-		tlbsx	r0,r0,r31
-		mfspr	r25,MAS1
-		andis.	r25,r25,MAS1_VALID@h
+		tlbsx	r0,r0,r9
+		mfspr	r4,MAS1
+		andis.	r4,r4,MAS1_VALID@h
 		bne	.GotTBL
-		mfspr	r25,PID2
-		slwi	r25,r25,16
-		or	r25,r25,r26
-		mtspr	MAS6,r25
+		mfspr	r4,PID2
+		slwi	r4,r4,16
+		or	r4,r4,r5
+		mtspr	MAS6,r4
 		isync
-		tlbsx	r0,r0,r31				#Should be tlbsx r0,r31 in BookE
-		mfspr	r25,MAS1
-		andis.	r25,r25,MAS1_VALID@h
-		beq	.ExcDone
-.GotTBL:	mfspr	r25,MAS3
-		ori	r25,r25,MAS3_UX|MAS3_SX
-		mtspr	MAS3,r25
+		tlbsx	r0,r0,r9				#Should be tlbsx r0,r9 in BookE
+		mfspr	r4,MAS1
+		andis.	r4,r4,MAS1_VALID@h
+		beq	.ExcExit
+.GotTBL:	mfspr	r4,MAS3
+		ori	r4,r4,MAS3_UX|MAS3_SX
+		mtspr	MAS3,r4
 		isync
 		tlbwe	r0,r0,0					#Should be tlbwe in BookE
 		li	r3,1
-		b	.ExcDone
+		blr
+		
+#***********************************************		
+		
+.ItsAlignment:	lwz	r6,ExceptionContext_Flags(r3)
+		rlwinm	r6,r6,0,30,31
+		cmpwi	r6,3
+		bne	.NextHandler
+
+		la	r4,ExceptionContext_fpr(r3)		#Start of fp regtable in r4
+		la	r11,ExceptionContext_gpr(r3)		#Start of gp regtable in r11
+		lis	r12,AlignSpot@ha
+		lwz	r5,ExceptionContext_ip(r3)
+		lwz	r5,0(r5)
+
+		rlwinm	r6,r5,14,24,28				#get floating point register offset
+		rlwinm	r7,r5,18,25,29				#get destination register offset
+		mr.	r10,r7
+		beq	.ItsR0
+		lwzx	r10,r11,r7				#get address from destination register
+.ItsR0:		rlwinm	r8,r5,0,16,31				#get displacement
+
+		rlwinm	r0,r5,6,26,31		
+		cmpwi	r0,0x34					#test for stfs
+		beq	.stfs
+		cmpwi	r0,0x35
+		beq	.stfsu
+		cmpwi	r0,0x30
+		beq	.lfs
+		cmpwi	r0,0x31
+		beq	.lfsu
+		cmpwi	r0,0x1f
+		beq	.lstfsx
+		cmpwi	r0,0x32
+		beq	.lfd
+		cmpwi	r0,0x36
+		beq	.stfd
+		b	.NextHandler
+
+.stfd:		lwzx	r9,r4,r6
+		stwx	r9,r10,r8
+		addi	r6,r6,4
+		addi	r8,r8,4
+		lwzx	r9,r4,r6
+		stwx	r9,r10,r8
+		b	.AligExit
+
+.stfsu:		add	r9,r10,r8
+		stwx	r9,r11,r7
+
+.stfs:		lfdx	f1,r4,r6				#get value from fp register
+		stfs	f1,AlignSpot@l(r12)			#store it on correct aligned spot
+		lwz	r6,AlignSpot@l(r12)			#Get the correct 32 bit value
+		stwx	r6,r10,r8				#Store correct value
+		b	.AligExit
+
+.lfd:		lwzx	r9,r10,r8
+		stw	r9,AlignSpot@l(r12)
+		addi	r8,r8,4
+		lwzx	r9,r10,r8
+		stw	r9,4+AlignSpot@l(r12)
+		lfd	f1,AlignSpot@l(r12)
+		stfdx	f1,r4,r6
+		b	.AligExit
+
+.lfsu:		add	r5,r10,r8				#Add displacement
+		stwx	r5,r11,r7	
+
+.lfs:		lwzx	r9,r10,r8				#Get 32 bit value
+		stw	r9,AlignSpot@l(r12)			#Store it on aligned spot
+		lfs	f1,AlignSpot@l(r12)			#Get it and convert it to 64 bit
+		stfdx	f1,r4,r6				#Store the 64 bit value
+		b	.AligExit
+		
+.lstfsx:	rlwinm	r8,r5,23,25,29				#get index register
+		lwzx	r8,r11,r8				#get index register value
+		rlwinm.	r0,r5,24,31,31
+		bne	.stfs
+		b	.lfs
+		
+.NextHandler:	li	r3,0
+		blr
+
+.AligExit:	lwz	r5,ExceptionContext_ip(r3)
+		addi	r5,r5,4
+		stw	r5,ExceptionContext_ip(r3)	
+		li	r3,1
+		blr
 
 #********************************************************************************************	
-
-.DebugStartOutPut:						#Function(r27),r4,r5,r6,r7
-		prolog
-		
-		stwu	r31,-4(r13)
-		stwu	r30,-4(r13)
-		stwu	r29,-4(r13)
-		stwu	r28,-4(r13)
-		stwu	r26,-4(r13)
-		stwu	r25,-4(r13)
-		stwu	r24,-4(r13)
-		stwu	r23,-4(r13)
-		
-		lbz	r31,libwarp_DebugFlag(r30)
-		mr.	r31,r31
-		beq	.NoDebugStart
-		
-		mr	r28,r4
-		mr	r26,r5
-		mr	r25,r6
-		mr	r24,r7
-		lwz	r31,libwarp_IExec(r30)		
-		ldaddr	r30,DebugString
-		
-		li	r4,0
-		CALLOS	r31,FindTask
-		
-		lwz	r23,LN_NAME(r3)	
-		lwz	r29,pr_CLI(r3)
-		mr.	r29,r29
-		beq	.NoCLI
-		
-		rlwinm	r29,r29,2,0,31
-		lwz	r29,cli_CommandName(r29)
-		mr.	r29,r29
-		beq	.NoCLI
-		
-		rlwinm	r23,r29,2,0,31
-		addi	r23,r23,1
-				
-.NoCLI:		stw	r27,12(r1)
-		stw	r28,16(r1)
-		stw	r26,20(r1)
-		stw	r23,8(r1)
-		stw	r25,24(r1)
-		mr	r4,r30
-		stw	r24,28(r1)
-		CALLOS	r31,DebugPrintF
-		
-		mr	r4,r28
-		mr	r5,r26
-		mr	r6,r25
-		mr	r7,r24
-		
-.NoDebugStart:	lwz	r23,0(r13)
-		lwz	r24,4(r13)
-		lwz	r25,8(r13)
-		lwz	r26,12(r13)
-		lwz	r28,16(r13)
-		lwz	r29,20(r13)
-		lwz	r30,24(r13)
-		lwz	r31,28(r13)
-		addi	r13,r13,32
-		
-		epilog
-		
-#********************************************************************************************		
-
-.DebugEndOutPut:
-		prolog					#Function(r27), result(r3)
-		
-		stwu	r31,-4(r13)
-		stwu	r30,-4(r13)
-		stwu	r29,-4(r13)
-		stwu	r28,-4(r13)
-		stwu	r26,-4(r13)
-		stwu	r25,-4(r13)
-		
-		lbz	r31,libwarp_DebugFlag(r30)
-		mr.	r31,r31
-		beq	.NoDebugEnd
-		
-		mr	r28,r4
-		mr	r29,r3
-		lwz	r31,libwarp_IExec(r30)
-		ldaddr	r30,DebugString2
-		
-		li	r4,0
-		CALLOS	r31,FindTask
-		
-		lwz	r26,LN_NAME(r3)
-		
-		lwz	r25,pr_CLI(r3)
-		mr.	r25,r25
-		beq	.NoCLI2
-		
-		rlwinm	r25,r25,2,0,31
-		lwz	r25,cli_CommandName(r25)
-		mr.	r25,r25
-		beq	.NoCLI2
-		
-		rlwinm	r26,r25,2,0,31
-		addi	r26,r26,1
-		
-.NoCLI2:	stw	r27,12(r1)
-		stw	r29,16(r1)
-		stw	r26,8(r1)
-		mr	r4,r30
-		CALLOS	r31,DebugPrintF
-		
-		mr	r3,r29
-		mr	r4,r28
-		
-.NoDebugEnd:	lwz	r25,0(r13)
-		lwz	r26,4(r13)
-		lwz	r28,8(r13)
-		lwz	r29,12(r13)
-		lwz	r30,16(r13)
-		lwz	r31,20(r13)
-		addi	r13,r13,24
-		
-
-		epilog
-			
-#********************************************************************************************		
 
 .UnSupported:						#Function(r27)
 		prolog
@@ -779,6 +729,11 @@ RunPPC68K:
 		andi.	r0,r17,PPF_ASYNC|PPF_THROW
 		bne	.NotStandard
 		
+		lis     r4,TRAPNUM_ALIGNMENT
+		ldaddr	r5,ExceptionHandler
+		lis     r6,TRAPNUM_ALIGNMENT
+		CALLOS	r31,SetTaskTrap
+
 		lwz	r4,libwarp_MachineFlag(r26)
 		mr.	r4,r4
 		beq	.NoTrapSet
@@ -852,7 +807,7 @@ RunPPC68K:
 		lwz	r17,0(r17)				#Force TBL load
 		
 		blrl
-		
+
 		lwz	r16,0(r13)
 		lwz	r17,PP_FLAGS(r16)
 		andi.	r0,r17,PPF_LINEAR
@@ -966,20 +921,7 @@ GetCPU68K:
 #********************************************************************************************
 
 PowerDebugMode68K:
-		prolog
-		
-		stwu	r31,-4(r13)
-		stwu	r30,-4(r13)
-		
-		lwz	r31,REG68K_A6(r3)
-		lwz	r30,REG68K_D0(r3)
-		stb	r30,libwarp_DebugFlag(r31)
-		
-		lwz	r30,0(r13)
-		lwz	r31,4(r13)
-		addi	r13,r13,8
-		
-		epilog
+		blr
 
 #********************************************************************************************
 
@@ -1198,9 +1140,6 @@ Run68K:
 		mr	r26,r4
 		mr	r28,r5
 		
-		ldaddr	r27,FRun68K	
-#		bl	.DebugStartOutPut
-		
 		lwz	r29,libwarp_IExec(r30)
 		mr.	r28,r28
 		beq	.ReturnACheck
@@ -1285,10 +1224,8 @@ Run68K:
 		
 .RunError68:	li	r3,3
 				
-.RunExit:	ldaddr	r27,FRun68K
-		mr	r28,r3
+.RunExit:	mr	r28,r3
 		lwz	r3,PP_REGS(r31)
-#		bl	.DebugEndOutPut
 		mr	r3,r28
 		
 		lwz	r28,0(r1)
@@ -1404,9 +1341,6 @@ AllocVecPPC:
 		mr	r30,r3
 		addi	r4,r4,32
 		
-		ldaddr	r27,FAllocVecPPC	
-		bl	.DebugStartOutPut
-		
 		lwz	r31,libwarp_IExec(r30)
 		loadreg	r0,MEMF_CLEAR|MEMF_CHIP|MEMF_REVERSE
 		and	r5,r5,r0
@@ -1432,9 +1366,7 @@ AllocVecPPC:
 		
 		addi	r3,r29,32
 		
-.MemError:	bl	.DebugEndOutPut
-		
-		lwz	r27,0(r13)
+.MemError:	lwz	r27,0(r13)
 		lwz	r29,4(r13)
 		lwz	r30,8(r13)
 		lwz	r31,12(r13)
@@ -1454,9 +1386,6 @@ FreeVecPPC:
 		
 		mr	r30,r3
 		subi	r29,r4,32
-		
-		ldaddr	r27,FFreeVecPPC	
-		bl	.DebugStartOutPut
 		
 		lwz	r31,libwarp_IExec(r30)
 		la	r4,libwarp_MemSem(r30)
@@ -1516,9 +1445,6 @@ CreateTaskPPC:
 
 		mr	r30,r3
 		
-		ldaddr	r27,FCreateTaskPPC	
-		bl	.DebugStartOutPut
-		
 		lwz	r31,libwarp_IExec(r30)
 		lwz	r29,libwarp_IUtility(r30)
 		addi	r27,r1,100
@@ -1575,10 +1501,7 @@ CreateTaskPPC:
 		CALLOS	r31,AddHead
 		mr	r3,r28		
 				
-.ExitCreate:	ldaddr	r27,FCreateTaskPPC
-		bl	.DebugEndOutPut
-		
-		lwz	r16,0(r13)
+.ExitCreate:	lwz	r16,0(r13)
 		lwz	r17,4(r13)
 		lwz	r18,8(r13)
 		lwz	r19,12(r13)
@@ -1800,9 +1723,6 @@ DeleteTaskPPC:
 		stwu	r27,-4(r13)
 
 		mr	r30,r3
-
-		ldaddr	r27,FFindTaskPPC	
-		bl	.DebugStartOutPut
 	
 		lhz	r29,lib_OpenCnt(r30)
 		lwz	r31,libwarp_IExec(r30)
@@ -1853,8 +1773,6 @@ FindTaskPPC:
 		stwu	r27,-4(r13)
 		
 		mr	r30,r3
-		ldaddr	r27,FFindTaskPPC	
-		bl	.DebugStartOutPut
 		
 		mr	r5,r4
 		mr.	r28,r4
@@ -1904,9 +1822,7 @@ FindTaskPPC:
 		CALLOS	r31,AddHead
 		mr	r3,r28
 		
-.NoSelf2:	bl	.DebugEndOutPut
-		
-		lwz	r27,0(r13)
+.NoSelf2:	lwz	r27,0(r13)
 		lwz	r28,4(r13)
 		lwz	r29,8(r13)
 		lwz	r30,12(r13)
@@ -1925,15 +1841,11 @@ InitSemaphorePPC:
 		stwu	r27,-4(r13)
 		
 		mr	r30,r3
-		ldaddr	r27,FInitSemaphorePPC
-		bl	.DebugStartOutPut
 		
 		lwz	r31,libwarp_IExec(r30)
 		CALLOS	r31,InitSemaphore
 		
 		li	r3,SSPPC_SUCCESS
-		
-		bl	.DebugEndOutPut
 		
 		lwz	r27,0(r13)
 		lwz	r30,4(r13)
@@ -1995,8 +1907,6 @@ ObtainSemaphorePPC:
 		stwu	r27,-4(r13)
 		
 		mr	r30,r3
-		ldaddr	r27,FObtainSemaphorePPC	
-		bl	.DebugStartOutPut
 		
 		lwz	r31,libwarp_IExec(r30)
 		CALLOS	r31,ObtainSemaphore
@@ -2041,8 +1951,6 @@ ReleaseSemaphorePPC:
 		stwu	r27,-4(r13)
 		
 		mr	r30,r3
-		ldaddr	r27,FReleaseSemaphorePPC
-		bl	.DebugStartOutPut
 		
 		lwz	r31,libwarp_IExec(r30)
 		CALLOS	r31,ReleaseSemaphore
@@ -2153,9 +2061,6 @@ FindNamePPC:
 		stwu	r27,-4(r13)
 		
 		mr	r30,r3
-		
-		ldaddr	r27,FFindNamePPC
-		bl	.DebugStartOutPut
 		
 		lwz	r31,libwarp_IExec(r30)
 		
@@ -2844,8 +2749,6 @@ CreateMsgPortPPC:
 		stwu	r27,-4(r13)
 		
 		mr	r30,r3
-		ldaddr	r27,FCreateMsgPortPPC
-		bl	.DebugStartOutPut
 
 		li      r29,100
 		li      r4,ASOT_PORT
@@ -2856,8 +2759,6 @@ CreateMsgPortPPC:
 		stw     r0,16(r1)
 		stw     r29,12(r1)
 		CALLOS	r31,AllocSysObjectTags
-		
-		bl	.DebugEndOutPut
 
 		lwz	r27,0(r13)
 		lwz	r29,4(r13)
@@ -2877,8 +2778,6 @@ DeleteMsgPortPPC:
 		stwu	r27,-4(r13)
 		
 		mr	r30,r3
-		ldaddr	r27,FDeleteMsgPortPPC
-		bl	.DebugStartOutPut
 		
 		mr      r5,r4
 		li      r4,ASOT_PORT
@@ -2940,9 +2839,6 @@ FindPortPPC:
 		
 		mr	r30,r3
 		
-		ldaddr	r27,FFindPortPPC
-		bl	.DebugStartOutPut
-		
 		lwz	r31,libwarp_IExec(r30)
 		CALLOS	r31,FindPort
 		
@@ -2963,8 +2859,6 @@ WaitPortPPC:
 		stwu	r27,-4(r13)
 		
 		mr	r30,r3
-		ldaddr	r27,FWaitPortPPC
-		bl	.DebugStartOutPut
 		
 		lwz	r31,libwarp_IExec(r30)
 		CALLOS	r31,WaitPort
@@ -2986,8 +2880,6 @@ PutMsgPPC:
 		stwu	r27,-4(r13)
 		
 		mr	r30,r3
-		ldaddr	r27,FPutMsgPPC
-		bl	.DebugStartOutPut
 		
 		lwz	r31,libwarp_IExec(r30)
 		CALLOS	r31,PutMsg
@@ -3009,8 +2901,6 @@ GetMsgPPC:
 		stwu	r27,-4(r13)
 		
 		mr	r30,r3
-		ldaddr	r27,FGetMsgPPC
-		bl	.DebugStartOutPut
 		
 		lwz	r31,libwarp_IExec(r30)
 		CALLOS	r31,GetMsg
@@ -3121,8 +3011,6 @@ AllocXMsgPPC:
 		
 		mr	r30,r3		
 		mr      r29,r5
-		ldaddr	r27,FAllocXMsgPPC
-		bl	.DebugStartOutPut
 		
 		loadreg	r5,MEMF_SHARED|MEMF_CLEAR
 		addi    r28,r4,MN_SIZE
@@ -3136,9 +3024,7 @@ AllocXMsgPPC:
 		sth     r28,MN_LENGTH(r3)
 		stw     r29,MN_REPLYPORT(r3)
 		
-.NoMsgMem:	bl	.DebugEndOutPut
-		
-		lwz	r27,0(r13)
+.NoMsgMem:	lwz	r27,0(r13)
 		lwz	r28,4(r13)
 		lwz	r29,8(r13)
 		lwz	r30,12(r13)
@@ -3156,9 +3042,7 @@ FreeXMsgPPC:
 		stwu	r30,-4(r13)
 		stwu	r27,-4(r13)
 
-		mr	r30,r3
-		ldaddr	r27,FFreeXMsgPPC
-		bl	.DebugStartOutPut		
+		mr	r30,r3		
 		
 		lwz	r31,libwarp_IExec(r30)		
 		CALLOS	r31,FreeVec
@@ -3180,8 +3064,6 @@ PutXMsgPPC:
 		stwu	r27,-4(r13)
 		
 		mr	r30,r3
-		ldaddr	r27,FPutXMsgPPC
-		bl	.DebugStartOutPut
 		
 		lwz	r31,libwarp_IExec(r30)
 		li	r0,NT_XMSGPPC
@@ -3602,15 +3484,11 @@ CreatePoolPPC:
 		stwu	r27,-4(r13)
 		
 		mr	r30,r3
-		ldaddr	r27,FCreatePoolPPC	
-		bl	.DebugStartOutPut
 		
 		loadreg	r0,MEMF_CLEAR|MEMF_CHIP|MEMF_REVERSE
 		and	r4,r4,r0
 		lwz	r31,libwarp_IExec(r30)
 		CALLOS	r31,CreatePool
-		
-		bl	.DebugEndOutPut
 		
 		lwz	r27,0(r13)
 		lwz	r30,4(r13)
@@ -3628,9 +3506,7 @@ DeletePoolPPC:
 		stwu	r30,-4(r13)
 		stwu	r27,-4(r13)
 		
-		mr	r30,r3
-		ldaddr	r27,FDeletePoolPPC	
-		bl	.DebugStartOutPut		
+		mr	r30,r3		
 		
 		lwz	r31,libwarp_IExec(r30)
 		CALLOS	r31,DeletePool
@@ -3652,13 +3528,9 @@ AllocPooledPPC:
 		stwu	r27,-4(r13)
 
 		mr	r30,r3		
-		ldaddr	r27,FAllocPooledPPC	
-		bl	.DebugStartOutPut
 		
 		lwz	r31,libwarp_IExec(r30)
 		CALLOS	r31,AllocPooled
-		
-		bl	.DebugEndOutPut
 		
 		lwz	r27,0(r13)
 		lwz	r30,4(r13)
@@ -3677,8 +3549,6 @@ FreePooledPPC:
 		stwu	r27,-4(r13)
 		
 		mr	r30,r3
-		ldaddr	r27,FFreePooledPPC	
-		bl	.DebugStartOutPut
 		
 		lwz	r31,libwarp_IExec(r30)
 		CALLOS	r31,FreePooled
@@ -3891,108 +3761,30 @@ WipeOut:
 IDString:	
 .byte	"$VER: powerpc.library 18.0 (01-Jun-16)",0
 
-DebugString:		.byte	"Process: %s Function: %s r4,r5,r6,r7 = %08lx,%08lx,%08lx,%08lx",10,0
-DebugString2:		.byte	"Process: %s Function: %s r3 = %08lx",10,0
 UnSupportedString:	.byte	"Unsupported function! Process: %s Function: %s",10,0
 
 FCausePPCInterrupt:		.byte	"FCausePPCInterrupt",0
-FRun68K:			.byte	"Run68K",0
-FWaitFor68K:			.byte	"WaitFor68K",0
-FSPrintF:			.byte	"SPrintF",0
 FRun68KLowLevel:		.byte	"Run68KLowLevel",0
-FAllocVecPPC:			.byte	"AllocVecPPC",0
-FFreeVecPPC:			.byte	"FreeVecPPC",0
-FCreateTaskPPC:			.byte	"CreateTaskPPC",0
-FDeleteTaskPPC:			.byte	"DeleteTaskPPC",0
-FFindTaskPPC:			.byte	"FindTaskPPC",0
-FInitSemaphorePPC:		.byte	"InitSemaphorePPC",0
-FFreeSemaphorePPC:		.byte	"FreeSemaphorePPC",0
-FAddSemaphorePPC:		.byte	"AddSemaphorePPC",0
-FRemSemaphorePPC:		.byte	"RemSemaphorePPC",0
-FObtainSemaphorePPC:		.byte	"ObtainSemaphorePPC",0
-FAttemptSemaphorePPC:		.byte	"AttemptSemaphorePPC",0
-FReleaseSemaphorePPC:		.byte	"ReleaseSemaphorePPC",0
-FFindSemaphorePPC:		.byte	"FindSemaphorePPC",0
-FInsertPPC:			.byte	"InsertPPC",0
-FAddHeadPPC:			.byte	"AddHeadPPC",0
-FAddTailPPC:			.byte	"AddtailPPC",0
-FRemovePPC:			.byte	"RemovePPC",0
-FRemHeadPPC:			.byte	"RemHeadPPC",0
-FRemTailPPC:			.byte	"RemTailPPC",0
-FEnqueuePPC:			.byte	"EnqueuePPC",0
-FFindNamePPC:			.byte	"FindNamePPC",0
-FFindTagItemPPC:		.byte	"FindTagItemPPC",0
-FGetTagDataPPC:			.byte	"GetTagItemPPC",0
-FNextTagItemPPC:		.byte	"NextTagItemPPC",0
-FAllocSignalPPC:		.byte	"AllocSignalPPC",0
-FFreeSignalPPC:			.byte	"FreeSignalPPC",0
-FSetSignalPPC:			.byte	"SetSignalPPC",0
-FSignalPPC:			.byte	"SignalPPC",0
-FWaitPPC:			.byte	"WaitPPC",0
-FSetTaskPriPPC:			.byte	"SetTaskPriPPC",0
-FSignal68K:			.byte	"Signal68K",0
-FSetCache:			.byte	"SetCache",0
 FSetExcHandler:			.byte	"SetExcHandler",0
 FRemExcHandler:			.byte	"RemExcHandler",0
-FSuper:				.byte	"Super",0
-FUser:				.byte	"User",0
 FSetHardware:			.byte	"SetHardware",0
 FModifyFPExc:			.byte	"ModifyFPExc",0
-FWaitTime:			.byte	"WaitTime",0
-FChangeStack:			.byte	"ChangeStack",0
 FLockTaskList:			.byte	"LockTaskList",0
 FUnLockTaskList:		.byte	"UnlockTaskList",0
 FSetExcMMU:			.byte	"SetExcMMU",0
 FClearExcMMU:			.byte	"ClearExcMMU",0
 FChangeMMU:			.byte	"ChangeMMU",0
-FGetInfo:			.byte	"GetInfo",0
-FCreateMsgPortPPC:		.byte	"CreateMsgPortPPC",0
-FDeleteMsgPortPPC:		.byte	"DeleteMsgPortPPC",0
-FAddPortPPC:			.byte	"AddPortPPC",0
-FRemPortPPC:			.byte	"RemPortPPC",0
-FFindPortPPC:			.byte	"FindPortPPC",0
-FWaitPortPPC:			.byte	"WaitPortPPC",0
-FPutMsgPPC:			.byte	"PutMsgPPC",0
-FGetMsgPPC:			.byte	"GetMsgPPC",0
-FReplyMsgPPC:			.byte	"ReplyMsgPPC",0
-FFreeAllMem:			.byte	"FreeAllMem",0
-FCopyMemPPC:			.byte	"CopyMemPPC",0
-FAllocXMsgPPC:			.byte	"AllocXMsgPPC",0
-FFreeXMsgPPC:			.byte	"FreeXMsgPPC",0
-FPutXMsgPPC:			.byte	"PutXMsgPPC",0
-FGetSysTimePPC:			.byte	"GetSysTimePPC",0
-FAddTimePPC:			.byte	"AddTimePPC",0
-FSubTimePPC:			.byte	"SubTimePPC",0
-FCmpTimePPC:			.byte	"CmpTimePPC",0
-FSetReplyPortPPC:		.byte	"SetReplyPortPPC",0
 FSnoopTask:			.byte	"SnoopTask",0
 FEndSnoopTask:			.byte	"EndSnoopTask",0
-FGetHALInfo:			.byte	"GetHALInfo",0
 FSetScheduling:			.byte	"SetScheduling",0
 FFindTaskByID:			.byte	"FindTaskByID",0
-FSetNiceValue:			.byte	"SetNiceValue",0
-FTrySemaphorePPC:		.byte	"TrySemaphorePPC",0
 FAllocPrivateMem:		.byte	"AllocPrivateMem",0
 FFreePrivateMem:		.byte	"FreePrivateMem",0
 FResetPPC:			.byte	"ResetPPC",0
-FNewListPPC:			.byte	"NewListPPC",0
 FSetExceptPPC:			.byte	"SetExceptPPC",0
-FObtainSemaphoreSharedPPC:	.byte	"ObtainSemaphoreSharedPPC",0
-FAttemptSemaphoreSharedPPC:	.byte	"AttemptSempahoreSharedPPC",0
-FProcurePPC:			.byte	"ProcurePPC",0
-FVacatePPC:			.byte	"VacatePPC",0
 FCauseInterrupt:		.byte	"CauseInterrupt",0
-FCreatePoolPPC:			.byte	"CreatePoolPPC",0
-FDeletePoolPPC:			.byte	"DeletePoolPPC",0
-FAllocPooledPPC:		.byte	"AllocPooledPPC",0
-FFreePooledPPC:			.byte	"FreePooledPPC",0
-FRawDoFmtPPC:			.byte	"RawDoFmtPPC",0
-FPutPublicMsgPPC:		.byte	"PutPublicMsgPPC",0
-FAddUniquePortPPC:		.byte	"AddUniquePortPPC",0
-FAddUniqueSemaphorePPC:		.byte	"AddUniqueSemaphorePPC",0
 FIsExceptionMode:		.byte	"IsExceptionMode",0
-FAllocatePPC:			.byte	"AllocatePPC",0
-FDeallocatePPC:			.byte	"DeallocatePPC",0
+
 .align	2
 
 #********************************************************************************************
@@ -4222,8 +4014,8 @@ CausePPCInterrupt:		jmp CausePPCInterrupt68K
 #********************************************************************************************
 
 		.sbss
-
-WarpLibBase:
-.long		0
+		.align 4
+AlignSpot:	.long 0,0
+WarpLibBase:	.long 0
 
 #********************************************************************************************

@@ -34,11 +34,13 @@
 .set libwarp_PortSem,112
 .set libwarp_SemSem,158
 .set libwarp_MemSem,204
-.set libwarp_DebugFlag,250
 .set libwarp_CacheFlag,251
 .set libwarp_MemList,252
 .set libwarp_TaskList,264
-.set libwarp_PosSize,276
+.set libwarp_AlignmentExcHigh,276
+.set libwarp_AlignmentExcLow,280
+.set libwarp_OldAlignmentExc,284
+.set libwarp_PosSize,288
 
 .set EXCDATA_TYPE,8				#Always NT_INTERRUPT
 .set EXCDATA_PRI,9				#This
@@ -477,6 +479,7 @@
 .set NT_LIBRARY,9
 .set NT_MEMORY,10
 .set NT_PROCESS,13
+.set NT_EXTINTERRUPT,20
 .set NT_PPCTASK,100
 .set NT_MSGPORTPPC,101
 .set NT_XMSG68K,102
@@ -688,11 +691,14 @@
 
 .set ASOT_PORT,			6
 .set ASOT_IOREQUEST,		0
+.set ASOT_INTERRUPT,		2
 
 .set ASO_NoTrack,			0x80000001
 .set ASOIOR_ReplyPort,			0x8000000b
 .set ASOIOR_Size,			0x8000000a
 .set ASOPORT_Size,			0x8000000a
+.set ASOINTR_Code,			0x8000000b
+.set ASOINTR_Data,			0x8000000c
 
 .set GMIT_Machine,0x80000001
 .set MACHINETYPE_UNKNOWN,	0
@@ -712,8 +718,25 @@
 .set PPCSTATEF_APPRUNNING,	4
 
 .set TRAPNUM_INST_SEGMENT_VIOLATION,	0x0300
+.set TRAPNUM_ALIGNMENT,			0x0400
 
+.set is_Code,			18
+.set is_Data,			14
+
+.set ECF_FULL_GPRS,1<<0
+.set ECF_FPU,1<<1
+.set ECF_FULL_FPU,1<<2
+
+.set ExceptionContext_Flags,0
 .set ExceptionContext_ip,12
+.set ExceptionContext_gpr,16
+.set ExceptionContext_lr,144
+.set ExceptionContext_xer,148
+.set ExceptionContext_ctr,152
+.set ExceptionContext_lr,156
+.set ExceptionContext_dsisr,160
+.set ExceptionContext_dar,164
+.set ExceptionContext_fpr,168
 .set TLB_VALID,0x200
 .set TLB_EPN,21
 .set TLB_UX,0x20

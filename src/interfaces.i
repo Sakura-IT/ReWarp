@@ -63,6 +63,8 @@
 .set CheckIO,			524
 .set SendIO,			532
 .set WaitIO,			540
+.set AddIntServer,		556
+.set SetIntVector,		564
 .set SuperState,		576
 .set UserState,			580
 .set SetTaskTrap,		588
