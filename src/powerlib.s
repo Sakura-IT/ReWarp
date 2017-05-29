@@ -805,9 +805,11 @@ RunPPC68K:
 .JustCode:	mtlr	r17
 		stw	r2,20(r1)
 		lwz	r17,0(r17)				#Force TBL load
+		stw	r13,100(r1)
 		
 		blrl
 
+		lwz	r13,100(r1)
 		lwz	r16,0(r13)
 		lwz	r17,PP_FLAGS(r16)
 		andi.	r0,r17,PPF_LINEAR
@@ -1159,7 +1161,7 @@ Run68K:
 		loadreg	r4,'lowl'
 		lwz	r27,0(r27)
 		cmpw	r4,r27
-#		beq	.CheckLow		
+		beq	.CheckLow		
 		
 .ReturnACheck:	lwz	r27,PP_FLAGS(r31)
 		mr.	r27,r27
