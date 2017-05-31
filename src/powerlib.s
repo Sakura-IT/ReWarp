@@ -507,7 +507,16 @@ ExceptionHandler:
 .NextHandler:	li	r3,0
 		blr
 
-.AligExit:	lwz	r5,ExceptionContext_ip(r3)
+.AligExit:	lis	r5,WarpLibBase@ha
+		lwz	r5,WarpLibBase@l(r5)			#For GetHALInfo			
+		lwz	r6,libwarp_AlignmentExcLow(r5)		#Counts number of FPU aligment issues
+		addic	r6,r6,1					#For debugging and optimization purposes
+		stw	r6,libwarp_AlignmentExcLow(r5)
+		lwz	r6,libwarp_AlignmentExcHigh(r5)
+		addze	r6,r6
+		stw	r6,libwarp_AlignmentExcHigh(r5)
+
+		lwz	r5,ExceptionContext_ip(r3)
 		addi	r5,r5,4
 		stw	r5,ExceptionContext_ip(r3)	
 		li	r3,1
@@ -3210,10 +3219,45 @@ EndSnoopTask:
 
 #********************************************************************************************
 
-GetHALInfo:						#needs implementation!
-		illegal
-		li	r3,84
-		blr
+GetHALInfo:
+		prolog
+
+		stwu	r31,-4(r13)
+		stwu	r30,-4(r13)
+		stwu	r29,-4(r13)
+
+		mr	r29,r4
+		mr	r30,r3
+		lwz	r31,libwarp_IUtility(r30)
+
+		loadreg	r4,HINFO_ALEXC_HIGH
+		mr	r5,r29
+
+		CALLOS	r31,FindTagItem
+
+		mr.	r3,r3
+		beq-	.NoHALTag1
+
+		lwz	r4,libwarp_AlignmentExcHigh(r30)
+		stw	r4,4(r3)
+		
+.NoHALTag1:	loadreg	r4,HINFO_ALEXC_LOW
+		mr	r5,r29
+
+		CALLOS	r31,FindTagItem
+
+		mr.	r3,r3
+		beq-	.NoHALTag2
+
+		lwz	r4,libwarp_AlignmentExcLow(r30)
+		stw	r4,4(r3)
+		
+.NoHALTag2:	lwz	r29,0(r13)
+		lwz	r30,4(r13)
+		lwz	r31,8(r13)
+		addi	r13,r13,12
+
+		epilog
 
 #********************************************************************************************
 
