@@ -75,10 +75,16 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 		la	r4,libwarp_MemSem(r31)
 		CALLOS	r29,InitSemaphore
 		
+		la	r4,libwarp_TaskSem(r31)
+		CALLOS	r29,InitSemaphore
+		
 		la	r4,libwarp_MemList(r31)
 		CALLOS	r29,NewMinList
 		
 		la	r4,libwarp_TaskList(r31)
+		CALLOS	r29,NewMinList
+		
+		la	r4,libwarp_PseudoTaskList(r31)
 		CALLOS	r29,NewMinList
 		
 		li	r4,ASOT_PORT
@@ -757,6 +763,7 @@ RunPPC68K:
 		CALLOS	r31,FindTask
 		cmpw	r3,r27
 		stw	r3,libwarp_CachedTask(r26)
+		
 		stwu	r26,-4(r13)
 		stwu	r31,-4(r13)
 		stwu	r16,-4(r13)
@@ -858,9 +865,9 @@ RunPPC68K:
 		
 		lwz	r31,4(r13)
 		lwz	r30,8(r13)
-		addi	r13,r13,12	
-								
-.NoTrapRemove:	li	r3,PPERR_SUCCESS
+		addi	r13,r13,12					
+
+		li	r3,PPERR_SUCCESS
 		b	.ExitRunPPC		
 		
 .NotStandard:	li	r3,PPERR_ASYNCERR
@@ -1485,33 +1492,35 @@ CreateTaskPPC:
 		
 .CorrectCreate:	mr	r29,r3
 		loadreg	r5,MEMF_SHARED|MEMF_CLEAR
-		li	r4,TASKPPC_MSGPORT+4
+		li	r4,TASKPPC_SIZE+TASKPTR_SIZE
 		CALLOS	r31,AllocVec
 		
 		lwz	r28,LN_NAME(r29)
 		stw	r28,LN_NAME(r3)
 		la	r28,pr_MsgPort(r29)
 		stw	r28,TASKPPC_MSGPORT(r3)
-		li	r28,NT_PROCESS
+		li	r28,NT_PPCTASK
 		stb	r28,LN_TYPE(r3)
 		stw	r29,TASKPPC_TASKPTR(r3)
 		mr	r28,r3
-		li	r0,21
+		li	r0,(TC_SIZE/4)-3
 		mfctr	r4
 		la	r29,8(r29)
 		la	r3,8(r3)
 		mtctr	r0
-		
+
 .CopyTask2:	lwzu	r0,4(r29)
 		stwu	r0,4(r3)
 		bdnz	.CopyTask2
-		
+
 		mtctr	r4
+		
 		la	r4,libwarp_TaskList(r30)
 		mr	r5,r28
-		CALLOS	r31,AddHead
+		CALLOS	r31,AddTail
+
 		mr	r3,r28		
-				
+
 .ExitCreate:	lwz	r16,0(r13)
 		lwz	r17,4(r13)
 		lwz	r18,8(r13)
@@ -1771,7 +1780,7 @@ DeleteTaskPPC:
 		addi	r13,r13,16
 		
 		epilog
-
+		
 #********************************************************************************************
 
 FindTaskPPC:
@@ -1806,19 +1815,19 @@ FindTaskPPC:
 		bne	.NoSelf2
 		
 		loadreg	r5,MEMF_SHARED|MEMF_CLEAR
-		li	r4,TASKPPC_MSGPORT+4
+		li	r4,TASKPPC_SIZE+TASKPTR_SIZE
 		CALLOS	r31,AllocVec
 		
 		lwz	r28,LN_NAME(r29)
 		stw	r28,LN_NAME(r3)
 		la	r28,pr_MsgPort(r29)
 		stw	r28,TASKPPC_MSGPORT(r3)
-		li	r28,NT_PROCESS
+		li	r28,NT_PPCTASK
 		stb	r28,LN_TYPE(r3)
 		stw	r29,TASKPPC_TASKPTR(r3)
 		mr	r28,r3
 		
-		li	r0,21
+		li	r0,(TC_SIZE/4)-3
 		mfctr	r5
 		la	r29,8(r29)
 		la	r3,8(r3)
@@ -1828,9 +1837,11 @@ FindTaskPPC:
 		bdnz	.CopyTask
 		
 		mtctr	r5
+		
 		mr	r5,r28
 		la	r4,libwarp_TaskList(r30)
-		CALLOS	r31,AddHead
+		CALLOS	r31,AddTail
+		
 		mr	r3,r28
 		
 .NoSelf2:	lwz	r27,0(r13)
@@ -2529,16 +2540,18 @@ ChangeStack:					#ToBeImplemented!
 LockTaskList:
 		prolog
 		
+		stwu	r31,-4(r13)
 		stwu	r30,-4(r13)
-		stwu	r27,-4(r13)
 		
 		mr	r30,r3
-		ldaddr	r27,FLockTaskList
-		bl	.UnSupported		
-		li	r3,0
+		lwz	r31,libwarp_IExec(r30)
+		la	r4,libwarp_TaskSem(r30)
+		CALLOS	r31,ObtainSemaphore
 		
-		lwz	r27,0(r13)
-		lwz	r30,4(r13)
+		lwz	r3,libwarp_PseudoTaskList(r30)
+		
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
 		addi	r13,r13,8
 		
 		epilog
@@ -2548,16 +2561,16 @@ LockTaskList:
 UnLockTaskList:
 		prolog
 		
+		stwu	r31,-4(r13)
 		stwu	r30,-4(r13)
-		stwu	r27,-4(r13)
 		
 		mr	r30,r3
-		ldaddr	r27,FUnLockTaskList
-		bl	.UnSupported		
-		li	r3,0
+		lwz	r31,libwarp_IExec(r30)
+		la	r4,libwarp_TaskSem(r30)
+		CALLOS	r31,ReleaseSemaphore
 		
-		lwz	r27,0(r13)
-		lwz	r30,4(r13)
+		lwz	r30,0(r13)
+		lwz	r31,4(r13)
 		addi	r13,r13,8
 		
 		epilog
@@ -3815,8 +3828,6 @@ FSetExcHandler:			.byte	"SetExcHandler",0
 FRemExcHandler:			.byte	"RemExcHandler",0
 FSetHardware:			.byte	"SetHardware",0
 FModifyFPExc:			.byte	"ModifyFPExc",0
-FLockTaskList:			.byte	"LockTaskList",0
-FUnLockTaskList:		.byte	"UnlockTaskList",0
 FSetExcMMU:			.byte	"SetExcMMU",0
 FClearExcMMU:			.byte	"ClearExcMMU",0
 FChangeMMU:			.byte	"ChangeMMU",0

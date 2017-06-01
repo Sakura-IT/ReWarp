@@ -40,7 +40,9 @@
 .set libwarp_AlignmentExcHigh,276
 .set libwarp_AlignmentExcLow,280
 .set libwarp_OldAlignmentExc,284
-.set libwarp_PosSize,288
+.set libwarp_PseudoTaskList,288
+.set libwarp_TaskSem,300
+.set libwarp_PosSize,346
 
 .set EXCDATA_TYPE,8				#Always NT_INTERRUPT
 .set EXCDATA_PRI,9				#This
@@ -507,6 +509,7 @@
 .set TC_SPLOWER,58
 .set TC_SPUPPER,62
 .set TC_MEMENTRY,74
+.set TC_SIZE,92
 
 .set TS_RUN,2
 .set TS_READY,3
@@ -520,6 +523,9 @@
 .set TASKPPC_EMULATOR,2
 .set TASKPPC_CHOWN,3
 .set TASKPPC_ATOMIC,5
+
+.set TASKPTR_TASK,14
+.set TASKPTR_SIZE,18
 
 .set TASKPPC_STACKSIZE,92				#Problems here when programs use the non-private parts of this structure
 .set TASKPPC_STACKMEM,96
