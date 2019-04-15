@@ -1,7 +1,7 @@
 HOST	= aos4	# can be overriden when calling make
 
 AS	= vasmppc_std
-ASOPTS	= -quiet -Felf -many -mppc32
+ASOPTS	= -quiet -Felf -many -mppc32 -m403
 LD	= vlink
 LDOPTS	= -belf32amigaos -T$(VLIBOS4_DIR)script -P_start -P__amigaos4__ -q -s -n
 LHA	= lha

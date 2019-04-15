@@ -17,5 +17,5 @@ Both can be found on Aminet.
 See the wiki for build procedure description:
 https://github.com/Sakura-IT/ReWarp/wiki
 
-Automated binary builds are available from Jenkins: https://sonnet.uguu.waw.pl/jenkins/job/ReWarp/ .
+Automated binary builds are available from Jenkins:  https://jenkins.sakura-it.pl/job/ReWarp
 
