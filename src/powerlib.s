@@ -212,6 +212,8 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 		beq	.PPC500Setup
 		cmpwi	r14,MACHINETYPE_X5000_40
 		beq	.PPC500Setup
+		cmpwi	r14,MACHINETYPE_A1222
+		beq	.PPC500Setup
 		b	.ErrorIntExp
 		
 .ErrorIntExp:	mr	r4,r28
