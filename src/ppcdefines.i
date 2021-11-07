@@ -13,9 +13,10 @@
 .set lib_IdString,24
 .set lib_OpenCnt,32
 
-.set libwarp_SegList,36
-.set libwarp_IExec,40
-.set libwarp_IDOS,44
+.set libwarp_SysLib,34
+.set libwarp_DosLib,38
+.set libwarp_SegList,42
+
 .set libwarp_ITimer,48
 .set libwarp_IUtility,52
 .set libwarp_CachedTask,56
@@ -40,9 +41,11 @@
 .set libwarp_AlignmentExcHigh,276
 .set libwarp_AlignmentExcLow,280
 .set libwarp_OldAlignmentExc,284
-.set libwarp_PseudoTaskList,288
-.set libwarp_TaskSem,300
-.set libwarp_PosSize,346
+.set libwarp_IExec,288
+.set libwarp_IDOS,292
+.set libwarp_PseudoTaskList,296
+.set libwarp_TaskSem,308
+.set libwarp_PosSize,354
 
 .set EXCDATA_TYPE,8				#Always NT_INTERRUPT
 .set EXCDATA_PRI,9				#This

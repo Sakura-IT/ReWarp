@@ -60,10 +60,13 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 		li	r0,0
 		stb	r11,LN_PRI(r3)
 		stb	r0,libwarp_CacheFlag(r3)
-		sth	r0,lib_Revision(r3)		
+		lwz	r4,Data_LibBase(r5)
+		li	r0,1
 		stw	r9,lib_IdString(r3)
+		sth	r0,lib_Revision(r3)
 		stw	r5,libwarp_IExec(r3)
 		mr	r31,r3
+		stw  r4,libwarp_SysLib(r3)
 		mr	r29,r5
 		
 		la	r4,libwarp_PortSem(r3)
@@ -145,6 +148,7 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 		mr.	r28,r3
 		beq	.ErrorExp
 		
+		stw  r3,libwarp_DosLib(r31)
 		mr	r4,r28
 		mr	r5,r27
 		li	r6,1
@@ -3820,7 +3824,7 @@ WipeOut:
 .byte	"wo2097_mixer",0
 
 IDString:	
-.byte	"$VER: powerpc.library 18.0 (01-Jun-16)",0
+.byte	"$VER: powerpc.library 18.1 (07-nov-21)",0
 
 UnSupportedString:	.byte	"Unsupported function! Process: %s Function: %s",10,0
 
