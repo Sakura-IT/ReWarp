@@ -254,7 +254,7 @@ INITFUNC:	#r3 = base, r4 = seglist, r5 = exec interface
 		li	r14,MACHF_PPC600LIKE
 		stw	r14,libwarp_MachineFlag(r31)
 		
-		CALLOS	r29,Enable
+		CALLOS	r29,Disable
 		
 		CALLOS	r29,SuperState
 		
@@ -3824,7 +3824,7 @@ WipeOut:
 .byte	"wo2097_mixer",0
 
 IDString:	
-.byte	"$VER: powerpc.library 18.1 (07-nov-21)",0
+.byte	"$VER: powerpc.library 18.1 (20-nov-21)",0
 
 UnSupportedString:	.byte	"Unsupported function! Process: %s Function: %s",10,0
 
